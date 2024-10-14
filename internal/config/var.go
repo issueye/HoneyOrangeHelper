@@ -8,10 +8,11 @@ import (
 type ServerArg struct {
 	Key   string `json:"key"`   // key
 	Value string `json:"value"` // value
+	Type  string `json:"type"`  // type
 	Mark  string `json:"mark"`  // mark
 }
 
-type ServerArgs []ServerArg
+type ServerArgs []*ServerArg
 
 // 存入数据库
 func (args ServerArgs) Value() (driver.Value, error) {
@@ -24,5 +25,5 @@ func (args *ServerArgs) Scan(value interface{}) error {
 }
 
 func (arr *ServerArgs) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, (*[]ServerArg)(arr))
+	return json.Unmarshal(data, (*[]*ServerArg)(arr))
 }
