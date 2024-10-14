@@ -1,10 +1,10 @@
 package config
 
 type Server struct {
-	ID     int64  `gorm:"column:id;primaryKey;autoIncrement:false;type:int" json:"id" form:"id"` // 编码
-	Name   string `gorm:"column:name;size:255;not null;comment:名称" json:"name" form:"name"`      // 名称
-	Path   string `gorm:"column:path;size:255;not null;comment:路径" json:"path" form:"path"`      // 路径
-	Params Arr    `gorm:"column:params;type:text;comment:参数" json:"params" form:"params"`        // 参数
+	ID     int64       `gorm:"column:id;primaryKey;autoIncrement:false;type:int" json:"id" form:"id"` // 编码
+	Name   string      `gorm:"column:name;size:255;not null;comment:名称" json:"name" form:"name"`      // 名称
+	Path   string      `gorm:"column:path;size:255;not null;comment:路径" json:"path" form:"path"`      // 路径
+	Params []ServerArg `gorm:"column:params;type:text;comment:参数" json:"params" form:"params"`        // 参数
 }
 
 func (Server) TableName() string {
