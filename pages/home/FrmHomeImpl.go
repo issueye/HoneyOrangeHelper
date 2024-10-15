@@ -3,6 +3,7 @@ package home
 import (
 	"HoneyOrangeHelper/pages/about"
 	"HoneyOrangeHelper/pages/server_mana"
+	"HoneyOrangeHelper/pages/server_query"
 	"time"
 
 	"github.com/ying32/govcl/vcl"
@@ -24,6 +25,13 @@ func (f *TFrmHome) OnFormCreate(sender vcl.IObject) {
 	f.TForm.SetPosition(types.PoScreenCenter)
 	f.Tray_icon.SetVisible(true)
 	f.Tray_icon.SetHint("蜜桔工具")
+
+	f.SetEvents()
+
+	f.Monitor()
+}
+
+func (f *TFrmHome) SetEvents() {
 	f.Tray_icon.SetOnClick(f.OnTrayIconClick)
 
 	f.Timer.SetOnTimer(f.OnTimer)
@@ -34,8 +42,7 @@ func (f *TFrmHome) OnFormCreate(sender vcl.IObject) {
 	f.Meu_add_server.SetOnClick(f.OnServerAddClick)
 	f.PM_close.SetOnClick(f.OnAppCloseClick)
 	f.PM_show.SetOnClick(f.OnAppShowClick)
-
-	f.Monitor()
+	f.Meu_server_list.SetOnClick(f.OnMeu_server_listClick)
 }
 
 func (f *TFrmHome) OnFormClose(sender vcl.IObject, action *types.TCloseAction) {
@@ -55,6 +62,12 @@ func (f *TFrmHome) OnAppCloseClick(sender vcl.IObject) {
 
 func (f *TFrmHome) OnAppShowClick(sender vcl.IObject) {
 	f.Show()
+}
+
+func (f *TFrmHome) OnMeu_server_listClick(sender vcl.IObject) {
+	page := server_query.NewFrm_server_qry(f)
+	page.SetPosition(types.PoOwnerFormCenter)
+	page.ShowModal()
 }
 
 func (f *TFrmHome) OnAboutClick(sender vcl.IObject) {

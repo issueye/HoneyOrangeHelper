@@ -2,6 +2,8 @@ package config
 
 import (
 	"HoneyOrangeHelper/pkg/utils"
+	"fmt"
+	"strings"
 )
 
 type Server struct {
@@ -38,4 +40,19 @@ func GetServerName(name string) (*Server, error) {
 	var server Server
 	err := configDB.Where("name = ?", name).First(&server).Error
 	return &server, err
+}
+
+func GetServerList(condition string) ([]*Server, error) {
+	serverList := make([]*Server, 0)
+
+	db := configDB.Model(&Server{})
+
+	qCondition := strings.TrimSpace(condition)
+
+	if qCondition != "" {
+		db = db.Where(fmt.Sprintf(" name like '%%%s%%' or path like '%%%s%%' ", qCondition, qCondition))
+	}
+
+	err := db.Find(&serverList).Error
+	return serverList, err
 }

@@ -10,6 +10,31 @@ import (
 
 // ::private::
 type TFrm_server_manaFields struct {
+	data          *config.Server
+	OperationType int // 0 新增 1 修改
+}
+
+func (f *TFrm_server_mana) SetData(data *config.Server) {
+	f.OperationType = 1
+
+	f.data = data
+
+	f.Edt_server_name.SetText(data.Name)
+	f.Edt_server_path.SetText(data.Path)
+
+	for index, v := range f.data.Params {
+		row := int32(index + 1)
+		f.Table_params.SetCells(0, row, v.Key)
+		f.Table_params.SetCells(1, row, v.Type)
+		f.Table_params.SetCells(2, row, v.Value)
+		f.Table_params.SetCells(3, row, v.Mark)
+		f.Table_params.SetCells(4, row, "删除")
+
+		f.Table_params.SetRowCount(f.Table_params.RowCount() + 1)
+
+		// 最后一行设置为清空
+		f.Table_params.SetCells(4, f.Table_params.RowCount()-1, "清空")
+	}
 }
 
 func (f *TFrm_server_mana) OnFormCreate(sender vcl.IObject) {
@@ -76,11 +101,20 @@ func (f *TFrm_server_mana) OnBtn_saveClick(sender vcl.IObject) {
 		})
 	}
 
-	config.AddServer(&config.Server{
-		Name:   f.Edt_server_name.Text(),
-		Path:   f.Edt_server_path.Text(),
-		Params: params,
-	})
+	if f.OperationType == 0 {
+		config.AddServer(&config.Server{
+			Name:   f.Edt_server_name.Text(),
+			Path:   f.Edt_server_path.Text(),
+			Params: params,
+		})
+	} else {
+		config.UpdateServer(&config.Server{
+			ID:     f.data.ID,
+			Name:   f.Edt_server_name.Text(),
+			Path:   f.Edt_server_path.Text(),
+			Params: params,
+		})
+	}
 
 	f.Close()
 }
