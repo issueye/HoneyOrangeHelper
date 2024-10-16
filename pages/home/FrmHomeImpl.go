@@ -29,7 +29,9 @@ type TFrmHomeFields struct {
 	IsServerRun  bool
 	ShowLogCount int32
 	IsTrueClose  bool
-	SrvList      []*SrvObject
+	ActiveItem   int64
+
+	SrvList []*SrvObject
 }
 
 func (f *TFrmHome) OnFormCreate(sender vcl.IObject) {
@@ -85,6 +87,7 @@ func (f *TFrmHome) closeItem(msgInfo *message.Message) error {
 }
 
 func (f *TFrmHome) InitData() {
+	f.ActiveItem = 0
 	f.SrvList = make([]*SrvObject, 0)
 
 	list, err := config.GetServerList("")
@@ -98,6 +101,7 @@ func (f *TFrmHome) InitData() {
 	}
 
 	if len(f.SrvList) > 0 {
+		f.ActiveItem = f.SrvList[0].Info.Code
 		f.SrvList[0].Frm.OnBtn_itemClick(nil)
 	}
 }
@@ -105,7 +109,7 @@ func (f *TFrmHome) InitData() {
 func (f *TFrmHome) AppendServer(cfg *config.Server) {
 	Id := utils.GenID()
 	cfg.Code = Id
-	frm := server.NewItemForm(f, Id, f.Pnl_items, f.Pnl_body, cfg)
+	frm := server.NewItemForm(f, Id, f.Sb_box, f.Pnl_body, cfg)
 	obj := &SrvObject{Info: cfg, Frm: frm}
 	obj.Id = Id
 	f.SrvList = append(f.SrvList, obj)

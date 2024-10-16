@@ -10,7 +10,7 @@ import (
 	"github.com/ying32/govcl/vcl/types"
 )
 
-func NewItemForm(owner vcl.IComponent, Id int64, parent *vcl.TPanel, body *vcl.TPanel, data *config.Server) *TFrm_server_item {
+func NewItemForm(owner vcl.IComponent, Id int64, parent vcl.IWinControl, body vcl.IWinControl, data *config.Server) *TFrm_server_item {
 	page := NewFrm_server_item(owner)
 	page.data = data
 	page.Id = Id
@@ -28,7 +28,7 @@ type TFrm_server_itemFields struct {
 	Id         int64
 	data       *config.Server
 	ServerForm *TFrm_server
-	BodyPnl    *vcl.TPanel
+	BodyPnl    vcl.IWinControl
 }
 
 func (f *TFrm_server_item) CloseWindow() {

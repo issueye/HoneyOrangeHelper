@@ -18,6 +18,12 @@ func NewForm(owner vcl.IComponent, operationType int, data *config.Server) *TFrm
 
 	if operationType == 1 && data != nil {
 		Frm_server_mana.SetData(data)
+	} else {
+		Frm_server_mana.Edt_server_name.Clear()
+		Frm_server_mana.Edt_server_path.Clear()
+		Frm_server_mana.Table_params.Clear()
+		Frm_server_mana.Table_params.SetRowCount(2)
+		Frm_server_mana.Table_params.SetCells(4, Frm_server_mana.Table_params.RowCount()-1, "清空")
 	}
 
 	return Frm_server_mana

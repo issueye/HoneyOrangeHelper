@@ -20,7 +20,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func NewForm(owner vcl.IComponent, parent *vcl.TPanel, data *config.Server) *TFrm_server {
+func NewForm(owner vcl.IComponent, parent vcl.IWinControl, data *config.Server) *TFrm_server {
 	page := NewFrm_server(owner)
 	page.data = data
 	page.SetParent(parent)
