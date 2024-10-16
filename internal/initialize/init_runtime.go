@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"HoneyOrangeHelper/internal/global"
 	"fmt"
 	"os"
 )
@@ -9,7 +10,7 @@ func InitRuntime() {
 	// 检查本地是否存在runtime文件夹
 	// 获取当前程序的路径
 	path := GetWorkDir()
-	rtPath := isExistsCreatePath(path, "runtime")
+	rtPath := isExistsCreatePath(path, global.ROOT_PATH)
 	dataPath := isExistsCreatePath(rtPath, "data")
 
 	// 创建 cache

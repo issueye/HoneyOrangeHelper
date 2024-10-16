@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"HoneyOrangeHelper/internal/global"
 	"HoneyOrangeHelper/pkg/db"
 	"HoneyOrangeHelper/pkg/logger"
 	"HoneyOrangeHelper/pkg/utils"
@@ -149,8 +150,8 @@ func getDB() *gorm.DB {
 
 func initConfig() {
 	// 检查文件是否存在
-	path := filepath.Join("runtime", "config", "config.db")
-	logPath := filepath.Join("runtime", "logs", "config.log")
+	path := filepath.Join(global.ROOT_PATH, "config", "config.db")
+	logPath := filepath.Join(global.ROOT_PATH, "logs", "config.log")
 	log, _, err := logger.NewZap(logPath, logger.LOM_DEBUG)
 	if err != nil {
 		panic(fmt.Errorf("创建日志对象失败，失败原因：%s", err))

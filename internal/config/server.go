@@ -2,15 +2,28 @@ package config
 
 import (
 	"HoneyOrangeHelper/pkg/utils"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
 
 type Server struct {
+	Code   int64      `gorm:"-" json:"code"`                                                         // 编码
 	ID     int64      `gorm:"column:id;primaryKey;autoIncrement:false;type:int" json:"id" form:"id"` // 编码
 	Name   string     `gorm:"column:name;size:255;not null;comment:名称" json:"name" form:"name"`      // 名称
 	Path   string     `gorm:"column:path;size:255;not null;comment:路径" json:"path" form:"path"`      // 路径
 	Params ServerArgs `gorm:"column:params;type:text;comment:参数" json:"params" form:"params"`        // 参数
+}
+
+func (srv *Server) ToJson() string {
+	data, _ := json.Marshal(srv)
+	return string(data)
+}
+
+func FromToJson(jsonStr string) (*Server, error) {
+	var server Server
+	err := json.Unmarshal([]byte(jsonStr), &server)
+	return &server, err
 }
 
 func (Server) TableName() string {

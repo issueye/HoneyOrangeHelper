@@ -2,10 +2,21 @@ package settings
 
 import (
 	"HoneyOrangeHelper/internal/config"
+	"HoneyOrangeHelper/internal/global"
 	"fmt"
 
 	"github.com/ying32/govcl/vcl"
+	"github.com/ying32/govcl/vcl/types"
 )
+
+func NewForm(owner vcl.IComponent) *TFrmSettings {
+	if FrmSettings == nil {
+		FrmSettings = NewFrmSettings(owner)
+	}
+
+	FrmSettings.SetPosition(types.PoOwnerFormCenter)
+	return FrmSettings
+}
 
 // ::private::
 type TFrmSettingsFields struct {
@@ -51,10 +62,9 @@ func (f *TFrmSettings) OnEdtShowLogCountChange(sender vcl.IObject) {
 }
 
 func (f *TFrmSettings) InitParams() {
-
 	// 日志
 	showLogCount := config.GetParam(config.LOG, "showLogCount", 100).Int()
-	logPath := config.GetParam(config.LOG, "path", "runtime/logs").String()
+	logPath := config.GetParam(config.LOG, "path", fmt.Sprintf("%s/logs", global.ROOT_PATH)).String()
 	compress := config.GetParam(config.LOG, "compress", true).Bool()
 	level := config.GetParam(config.LOG, "level", 0).Int()
 	MaxSize := config.GetParam(config.LOG, "max-size", 100).Int()

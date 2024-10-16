@@ -8,6 +8,21 @@ import (
 	"github.com/ying32/govcl/vcl/types"
 )
 
+func NewForm(owner vcl.IComponent, operationType int, data *config.Server) *TFrm_server_mana {
+	if Frm_server_mana == nil {
+		Frm_server_mana = NewFrm_server_mana(owner)
+	}
+
+	Frm_server_mana.OperationType = operationType
+	Frm_server_mana.SetPosition(types.PoOwnerFormCenter)
+
+	if operationType == 1 && data != nil {
+		Frm_server_mana.SetData(data)
+	}
+
+	return Frm_server_mana
+}
+
 // ::private::
 type TFrm_server_manaFields struct {
 	data          *config.Server
@@ -16,8 +31,10 @@ type TFrm_server_manaFields struct {
 
 func (f *TFrm_server_mana) SetData(data *config.Server) {
 	f.OperationType = 1
-
 	f.data = data
+
+	f.Table_params.Clear()
+	f.Table_params.SetRowCount(2)
 
 	f.Edt_server_name.SetText(data.Name)
 	f.Edt_server_path.SetText(data.Path)
@@ -95,8 +112,8 @@ func (f *TFrm_server_mana) OnBtn_saveClick(sender vcl.IObject) {
 
 		params = append(params, &config.ServerArg{
 			Key:   f.Table_params.Cells(0, i),
-			Value: f.Table_params.Cells(1, i),
-			Type:  f.Table_params.Cells(2, i),
+			Type:  f.Table_params.Cells(1, i),
+			Value: f.Table_params.Cells(2, i),
 			Mark:  f.Table_params.Cells(3, i),
 		})
 	}

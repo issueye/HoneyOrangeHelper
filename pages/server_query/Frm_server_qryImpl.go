@@ -22,7 +22,13 @@ func (f *TFrm_server_qry) OnFormCreate(sender vcl.IObject) {
 func (f *TFrm_server_qry) SetEvents() {
 	f.SetOnShow(f.OnShow)
 	f.Btn_query.SetOnClick(f.OnBtn_queryClick)
+	f.Btn_add.SetOnClick(f.OnBtn_addClick)
 	f.Table_data.SetOnButtonClick(f.OnTable_dataButtonClick)
+}
+
+func (f *TFrm_server_qry) OnBtn_addClick(sender vcl.IObject) {
+	page := server_mana.NewForm(f, 0, nil)
+	page.ShowModal()
 }
 
 func (f *TFrm_server_qry) OnBtn_queryClick(sender vcl.IObject) {

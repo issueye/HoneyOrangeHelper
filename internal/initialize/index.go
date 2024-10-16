@@ -8,4 +8,5 @@ func Init() {
 	InitRuntime()
 	config.InitConfig()
 	InitLogger()
+	InitEvetnBus()
 }

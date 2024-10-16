@@ -1,6 +1,9 @@
 package utils
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 // 获取程序运行目录
 func GetWorkDir() string {
@@ -23,4 +26,18 @@ func PathExists(path string) (bool, error) {
 		}
 	}
 	return false, err
+}
+
+func IsExistsCreatePath(path, name string) string {
+	p := fmt.Sprintf("%s/%s", path, name)
+	exists, err := PathExists(p)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	if !exists {
+		panic("创建【config】文件夹失败")
+	}
+
+	return p
 }
