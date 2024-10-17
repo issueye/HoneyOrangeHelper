@@ -1,12 +1,19 @@
-package server_query
+package server
 
 import (
 	"HoneyOrangeHelper/internal/config"
-	"HoneyOrangeHelper/pages/server_mana"
 
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
 )
+
+func NewServerQryForm(owner vcl.IComponent) *TFrm_server_qry {
+	if Frm_server_qry == nil {
+		Frm_server_qry = NewFrm_server_qry(owner)
+	}
+	Frm_server_qry.SetPosition(types.PoOwnerFormCenter)
+	return Frm_server_qry
+}
 
 // ::private::
 type TFrm_server_qryFields struct {
@@ -27,7 +34,7 @@ func (f *TFrm_server_qry) SetEvents() {
 }
 
 func (f *TFrm_server_qry) OnBtn_addClick(sender vcl.IObject) {
-	page := server_mana.NewForm(f, 0, nil)
+	page := NewServerManaForm(f, 0, nil)
 	page.ShowModal()
 	f.GetData()
 }
@@ -53,10 +60,7 @@ func (f *TFrm_server_qry) OnTable_dataButtonClick(sender vcl.IObject, col, row i
 
 	// 如果是修改按钮，则弹出修改窗口
 	if col == 2 {
-		page := server_mana.NewFrm_server_mana(f)
-		page.SetPosition(types.PoOwnerFormCenter)
-		page.SetData(f.list[row-1])
-		page.ShowModal()
+		NewServerManaForm(f, 1, f.list[row-1]).ShowModal()
 		f.GetData()
 	}
 }

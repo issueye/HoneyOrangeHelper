@@ -19,6 +19,7 @@ func InitRuntime() {
 	isExistsCreatePath(rtPath, "config")
 	isExistsCreatePath(rtPath, "logs")
 	isExistsCreatePath(rtPath, "static")
+	isExistsCreatePath(rtPath, "plugins")
 }
 
 // GetWorkDir

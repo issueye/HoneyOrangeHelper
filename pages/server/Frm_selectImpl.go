@@ -1,4 +1,4 @@
-package home
+package server
 
 import (
 	"HoneyOrangeHelper/internal/config"
@@ -7,7 +7,7 @@ import (
 	"github.com/ying32/govcl/vcl/types"
 )
 
-func NewForm(owner vcl.IComponent) *TFrm_select {
+func NewSelectForm(owner vcl.IComponent) *TFrm_select {
 	if Frm_select == nil {
 		Frm_select = NewFrm_select(owner)
 	}
@@ -17,7 +17,7 @@ func NewForm(owner vcl.IComponent) *TFrm_select {
 }
 
 func GetSelectData(owner vcl.IComponent) *config.Server {
-	NewForm(owner).ShowModal()
+	NewSelectForm(owner).ShowModal()
 	return Frm_select.IndexData
 }
 

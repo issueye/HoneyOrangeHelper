@@ -5,8 +5,6 @@ import (
 	"HoneyOrangeHelper/internal/global"
 	"HoneyOrangeHelper/pages/about"
 	"HoneyOrangeHelper/pages/server"
-	"HoneyOrangeHelper/pages/server_mana"
-	"HoneyOrangeHelper/pages/server_query"
 	"HoneyOrangeHelper/pages/settings"
 	"HoneyOrangeHelper/pkg/utils"
 	"context"
@@ -117,18 +115,18 @@ func (f *TFrmHome) AppendServer(cfg *config.Server) {
 }
 
 func (f *TFrmHome) SetEvents() {
+	f.TForm.SetOnClose(f.OnFormClose)
+	f.TForm.SetOnDestroy(f.OnFormDestroy)
+
 	f.Tray_icon.SetOnClick(f.OnTrayIconClick)
 
 	f.Timer.SetOnTimer(f.OnTimer)
 	f.Meu_item_about.SetOnClick(f.OnAboutClick)
 	f.Meu_log_settings.SetOnClick(f.OnMeu_log_settingsClick)
-
-	f.TForm.SetOnClose(f.OnFormClose)
-	f.TForm.SetOnDestroy(f.OnFormDestroy)
+	f.Meu_server_mana.SetOnClick(f.OnMeu_server_manaClick)
 
 	f.PM_close.SetOnClick(f.OnAppCloseClick)
 	f.PM_show.SetOnClick(f.OnAppShowClick)
-	f.Meu_server_mana.SetOnClick(f.OnMeu_server_manaClick)
 	f.Btn_server_add.SetOnClick(f.OnBtn_server_addClick)
 }
 
@@ -144,6 +142,9 @@ func (f *TFrmHome) OnFormDestroy(sender vcl.IObject) {
 
 func (f *TFrmHome) OnAppCloseClick(sender vcl.IObject) {
 	f.IsTrueClose = true
+	for _, srv := range f.SrvList {
+		srv.Frm.Free()
+	}
 	f.Close()
 }
 
@@ -152,7 +153,7 @@ func (f *TFrmHome) OnAppShowClick(sender vcl.IObject) {
 }
 
 func (f *TFrmHome) OnBtn_server_addClick(sender vcl.IObject) {
-	data := GetSelectData(f)
+	data := server.GetSelectData(f)
 	if data != nil {
 		f.AppendServer(data)
 
@@ -163,12 +164,11 @@ func (f *TFrmHome) OnBtn_server_addClick(sender vcl.IObject) {
 }
 
 func (f *TFrmHome) OnMeu_log_settingsClick(sender vcl.IObject) {
-	page := settings.NewForm(f)
-	page.ShowModal()
+	settings.NewForm(f).ShowModal()
 }
 
 func (f *TFrmHome) OnMeu_server_manaClick(sender vcl.IObject) {
-	page := server_query.NewFrm_server_qry(f)
+	page := server.NewFrm_server_qry(f)
 	page.SetPosition(types.PoOwnerFormCenter)
 	page.ShowModal()
 }
@@ -180,7 +180,7 @@ func (f *TFrmHome) OnAboutClick(sender vcl.IObject) {
 }
 
 func (f *TFrmHome) OnServerAddClick(sender vcl.IObject) {
-	frm := server_mana.NewFrm_server_mana(f)
+	frm := server.NewFrm_server_mana(f)
 	frm.SetPosition(types.PoOwnerFormCenter)
 	frm.ShowModal()
 }

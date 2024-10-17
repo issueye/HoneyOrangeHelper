@@ -27,3 +27,25 @@ func (args *ServerArgs) Scan(value interface{}) error {
 func (arr *ServerArgs) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, (*[]*ServerArg)(arr))
 }
+
+type Plugin struct {
+	Name    string `json:"name"`    // name
+	Process string `json:"process"` // process
+	Mark    string `json:"mark"`    // mark
+}
+
+type Plugins []*Plugin
+
+// 存入数据库
+func (args Plugins) Value() (driver.Value, error) {
+	return json.Marshal(args)
+}
+
+// 从数据库取数据
+func (args *Plugins) Scan(value interface{}) error {
+	return json.Unmarshal(value.([]byte), args)
+}
+
+func (arr *Plugins) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, (*[]*Plugin)(arr))
+}

@@ -5,7 +5,6 @@ import (
 	"HoneyOrangeHelper/internal/global"
 	"HoneyOrangeHelper/internal/gow32"
 	"HoneyOrangeHelper/internal/helper_cmd"
-	"HoneyOrangeHelper/pages/server_mana"
 	"HoneyOrangeHelper/pkg/logger"
 	"HoneyOrangeHelper/pkg/utils"
 	"context"
@@ -18,19 +17,18 @@ import (
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func NewForm(owner vcl.IComponent, parent vcl.IWinControl, data *config.Server) *TFrm_server {
+func NewServerForm(owner vcl.IComponent, parent vcl.IWinControl, data *config.Server) *TFrm_server {
 	page := NewFrm_server(owner)
 	page.data = data
 	page.SetParent(parent)
 	page.SetAlign(types.AlClient)
 	page.SetBorderStyle(types.BsNone)
 	page.Pnl_actions.SetAlignment(types.TaLeftJustify)
-	page.Lbl_id.SetCaption(fmt.Sprintf("ID: %d", data.Code))
-	page.Lbl_name.SetCaption(fmt.Sprintf("名称: %s", data.Name))
-	page.Lbl_path.SetCaption(fmt.Sprintf("路径: %s", data.Path))
-	page.InitLogger()
+	page.SetData(data)
 	return page
 }
 
@@ -43,6 +41,7 @@ type TFrm_serverFields struct {
 	cancel       context.CancelFunc
 	log          *zap.Logger
 	sugar        *zap.SugaredLogger
+	PluginBtns   []*PluginBtn
 }
 
 func (f *TFrm_server) OnFormCreate(sender vcl.IObject) {
@@ -63,6 +62,19 @@ func (f *TFrm_server) InitLogger() {
 	f.sugar, f.log = logger.InitLogger(cfg)
 }
 
+func (f *TFrm_server) CloseWindow() {
+	f.log.Info("关闭窗口")
+	f.log.Sync()
+	f.log = nil
+	f.sugar = nil
+
+	for _, btn := range f.PluginBtns {
+		btn.Btn.Free()
+	}
+
+	f.Close()
+}
+
 func (f *TFrm_server) SetEvents() {
 	f.Btn_remove_server.SetOnClick(f.OnBtn_remove_serverClick)
 	f.Btn_server_run.SetOnClick(f.OnBtn_server_runClick)
@@ -80,15 +92,38 @@ func (f *TFrm_server) OnBtn_server_settingsClick(sender vcl.IObject) {
 		return
 	}
 
-	server_mana.NewForm(f, 1, f.data).ShowModal()
+	NewServerManaForm(f, 1, f.data).ShowModal()
 	info, err := config.GetServer(f.data.ID)
 	if err != nil {
 		vcl.ShowMessage(err.Error())
 		return
 	}
+
+	f.SetData(info)
+}
+
+func (f *TFrm_server) SetData(data *config.Server) {
+	f.Lbl_id.SetCaption(fmt.Sprintf("ID: %d", data.Code))
+	f.Lbl_name.SetCaption(fmt.Sprintf("名称: %s", data.Name))
+	f.Lbl_path.SetCaption(fmt.Sprintf("路径: %s", data.Path))
+
 	code := f.data.Code
-	f.data = info
+	f.data = data
 	f.data.Code = code
+
+	// 释放所有插件按钮
+	for _, btn := range f.PluginBtns {
+		btn.Btn.Free()
+	}
+
+	// 处理插件
+	f.PluginBtns = make([]*PluginBtn, 0)
+	for _, p := range f.data.Plugins {
+		btn := NewPluginBtn(f, f.Pnl_actions, *f.Btn_server_run.BorderSpacing(), p, func() bool {
+			return f.IsRunning
+		})
+		f.PluginBtns = append(f.PluginBtns, btn)
+	}
 }
 
 func (f *TFrm_server) OnBtn_remove_serverClick(sender vcl.IObject) {
@@ -115,8 +150,34 @@ func (f *TFrm_server) OnBtn_server_runClick(sender vcl.IObject) {
 	}
 }
 
+func (f *TFrm_server) InitLogger() {
+	path := fmt.Sprintf("%s/logs/%d", global.ROOT_PATH, f.data.Code)
+	utils.IsExistsCreatePath(fmt.Sprintf("%s/logs", global.ROOT_PATH), fmt.Sprintf("%d", f.data.Code))
+
+	fp := path + "/server.log"
+
+	logger := zap.New(
+		zapcore.NewCore(
+			zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+			zapcore.AddSync(&lumberjack.Logger{
+				Filename:   fp,
+				MaxSize:    100, // megabytes
+				MaxBackups: 10,
+				MaxAge:     28, // days
+				Compress:   true,
+			}),
+			zapcore.DebugLevel,
+		),
+	)
+}
+
 func (f *TFrm_server) StopServer() {
 	f.cancel()
+
+	f.log.Info("关闭窗口")
+	f.log.Sync()
+	f.log = nil
+	f.sugar = nil
 }
 
 func (f *TFrm_server) RunServer() {
@@ -130,7 +191,9 @@ func (f *TFrm_server) RunServer() {
 		}
 	}
 
-	msgChan, err := helper_cmd.Run(f.ctx, f.data.Path, params...)
+	f.InitLogger()
+
+	msgChan, err := helper_cmd.Run(f.ctx, true, f.data.Path, params...)
 	if err != nil {
 		f.addLog(err.Error())
 	}
@@ -139,6 +202,7 @@ func (f *TFrm_server) RunServer() {
 }
 
 func (f *TFrm_server) InitData() {
+	f.PluginBtns = make([]*PluginBtn, 0)
 	f.IsRunning = false
 	f.ShowLogCount = 1000
 	f.Btn_server_run.SetImageIndex(0)

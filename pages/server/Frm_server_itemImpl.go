@@ -19,7 +19,7 @@ func NewItemForm(owner vcl.IComponent, Id int64, parent vcl.IWinControl, body vc
 	page.SetAlign(types.AlLeft)
 	page.SetBorderStyle(types.BsNone)
 	page.Btn_remove.SetVisible(false)
-	page.ServerForm = NewForm(owner, body, data)
+	page.ServerForm = NewServerForm(owner, body, data)
 	return page
 }
 
@@ -32,7 +32,7 @@ type TFrm_server_itemFields struct {
 }
 
 func (f *TFrm_server_item) CloseWindow() {
-	f.ServerForm.Close()
+	f.ServerForm.CloseWindow()
 	f.Close()
 }
 
