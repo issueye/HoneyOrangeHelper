@@ -61,7 +61,7 @@ func (f *PluginBtn) OpenPlugin() {
 	// vcl.ShowMessage(f.Info.Name)
 	f.ctx, f.cancel = context.WithCancel(context.Background())
 	path := filepath.Join(global.ROOT_PATH, "plugins", f.Info.Process)
-	msgChan, err := helper_cmd.Run(f.ctx, false, path)
+	msgChan, err := helper_cmd.Run(0)(f.ctx, false, path)
 	if err != nil {
 		vcl.ShowMessage(err.Error())
 	}

@@ -55,6 +55,7 @@ func (f *TFrm_server_mana) SetData(data *config.Server) {
 
 	f.Edt_server_name.SetText(data.Name)
 	f.Edt_server_path.SetText(data.Path)
+	f.Edt_close_path.SetText(data.CloseScript)
 
 	for index, v := range f.data.Params {
 		row := int32(index + 1)
@@ -95,6 +96,7 @@ func (f *TFrm_server_mana) SetEvents() {
 	f.Table_params.SetOnButtonClick(f.OnTable_paramsOnButtonClick)
 	f.Tb_plugin.SetOnButtonClick(f.OnTb_pluginOnButtonClick)
 	f.Mi_param_add.SetOnClick(f.OnMi_param_addClick)
+	f.Btn_select_close.SetOnClick(f.OnBtn_select_closeClick)
 }
 
 func (f *TFrm_server_mana) InitPage() {
@@ -104,6 +106,12 @@ func (f *TFrm_server_mana) InitPage() {
 func (f *TFrm_server_mana) OnBtn_select_serverClick(sender vcl.IObject) {
 	if f.Od_select_path.Execute() {
 		f.Edt_server_path.SetText(f.Od_select_path.FileName())
+	}
+}
+
+func (f *TFrm_server_mana) OnBtn_select_closeClick(sender vcl.IObject) {
+	if f.Od_select_path.Execute() {
+		f.Edt_close_path.SetText(f.Od_select_path.FileName())
 	}
 }
 
@@ -178,21 +186,19 @@ func (f *TFrm_server_mana) SaveData() {
 		})
 	}
 
+	srv := &config.Server{
+		Name:        f.Edt_server_name.Text(),
+		Path:        f.Edt_server_path.Text(),
+		CloseScript: f.Edt_close_path.Text(),
+		Params:      params,
+		Plugins:     plugins,
+	}
+
 	if f.OperationType == 0 {
-		config.AddServer(&config.Server{
-			Name:    f.Edt_server_name.Text(),
-			Path:    f.Edt_server_path.Text(),
-			Params:  params,
-			Plugins: plugins,
-		})
+		config.AddServer(srv)
 	} else {
-		config.UpdateServer(&config.Server{
-			ID:      f.data.ID,
-			Name:    f.Edt_server_name.Text(),
-			Path:    f.Edt_server_path.Text(),
-			Params:  params,
-			Plugins: plugins,
-		})
+		srv.ID = f.data.ID
+		config.UpdateServer(srv)
 	}
 }
 

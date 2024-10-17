@@ -5,12 +5,10 @@ import (
 	"HoneyOrangeHelper/internal/global"
 	"HoneyOrangeHelper/internal/gow32"
 	"HoneyOrangeHelper/internal/helper_cmd"
-	"HoneyOrangeHelper/pkg/logger"
 	"HoneyOrangeHelper/pkg/utils"
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -34,14 +32,15 @@ func NewServerForm(owner vcl.IComponent, parent vcl.IWinControl, data *config.Se
 
 // ::private::
 type TFrm_serverFields struct {
-	ShowLogCount int32 // 显示日志条数
-	data         *config.Server
-	IsRunning    bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	log          *zap.Logger
-	sugar        *zap.SugaredLogger
-	PluginBtns   []*PluginBtn
+	ShowLogCount     int32 // 显示日志条数
+	data             *config.Server
+	IsRunning        bool
+	ctx              context.Context
+	cancel           context.CancelFunc
+	log              *zap.Logger
+	sugar            *zap.SugaredLogger
+	PluginBtns       []*PluginBtn
+	lumberJackLogger *lumberjack.Logger
 }
 
 func (f *TFrm_server) OnFormCreate(sender vcl.IObject) {
@@ -49,24 +48,7 @@ func (f *TFrm_server) OnFormCreate(sender vcl.IObject) {
 	f.SetEvents()
 }
 
-func (f *TFrm_server) InitLogger() {
-	cfg := new(logger.Config)
-	cfg.Level = config.GetParam(config.LOG, "level", 0).Int()
-	path := fmt.Sprintf("%s/logs/%d", global.ROOT_PATH, f.data.Code)
-	utils.IsExistsCreatePath(fmt.Sprintf("%s/logs", global.ROOT_PATH), fmt.Sprintf("%d", f.data.Code))
-	cfg.Path = path
-	cfg.MaxSize = config.GetParam(config.LOG, "max-size", 100).Int() // MB
-	cfg.MaxBackups = config.GetParam(config.LOG, "max-backups", 100).Int()
-	cfg.MaxAge = config.GetParam(config.LOG, "max-age", 100).Int() // days
-	cfg.Compress = config.GetParam(config.LOG, "compress", true).Bool()
-	f.sugar, f.log = logger.InitLogger(cfg)
-}
-
 func (f *TFrm_server) CloseWindow() {
-	f.log.Info("关闭窗口")
-	f.log.Sync()
-	f.log = nil
-	f.sugar = nil
 
 	for _, btn := range f.PluginBtns {
 		btn.Btn.Free()
@@ -156,28 +138,46 @@ func (f *TFrm_server) InitLogger() {
 
 	fp := path + "/server.log"
 
-	logger := zap.New(
-		zapcore.NewCore(
-			zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-			zapcore.AddSync(&lumberjack.Logger{
-				Filename:   fp,
-				MaxSize:    100, // megabytes
-				MaxBackups: 10,
-				MaxAge:     28, // days
-				Compress:   true,
-			}),
-			zapcore.DebugLevel,
-		),
-	)
+	f.lumberJackLogger = &lumberjack.Logger{
+		Filename:   fp,
+		MaxSize:    100, // megabytes
+		MaxBackups: 10,
+		MaxAge:     28, // days
+		Compress:   true,
+	}
+
+	writerSyncer := zapcore.AddSync(f.lumberJackLogger)
+	encoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+
+	core := zapcore.NewCore(encoder, writerSyncer, zapcore.DebugLevel)
+	logger := zap.New(core)
+
+	f.log = logger
+	f.sugar = logger.Sugar()
 }
 
 func (f *TFrm_server) StopServer() {
+	f.addLog("停止服务中...")
+
+	if f.data.CloseScript != "" {
+		f.addLog("执行关闭脚本...")
+		f.addLog(fmt.Sprintf("脚本路径: %s", f.data.CloseScript))
+		_, err := helper_cmd.Run(20)(f.ctx, true, f.data.CloseScript)
+		if err != nil {
+			f.addLog(err.Error())
+		}
+	}
+
 	f.cancel()
 
-	f.log.Info("关闭窗口")
-	f.log.Sync()
-	f.log = nil
-	f.sugar = nil
+	if f.log != nil {
+		f.log.Info("服务已停止")
+		f.log.Sync()
+		f.log = nil
+		f.sugar = nil
+
+		f.lumberJackLogger.Close()
+	}
 }
 
 func (f *TFrm_server) RunServer() {
@@ -193,12 +193,12 @@ func (f *TFrm_server) RunServer() {
 
 	f.InitLogger()
 
-	msgChan, err := helper_cmd.Run(f.ctx, true, f.data.Path, params...)
+	msgChan, err := helper_cmd.Run(100)(f.ctx, true, f.data.Path, params...)
 	if err != nil {
 		f.addLog(err.Error())
 	}
 
-	f.Monitor(msgChan)
+	f.Monitor(f.ctx, msgChan)
 }
 
 func (f *TFrm_server) InitData() {
@@ -213,8 +213,8 @@ func (f *TFrm_server) InitData() {
 // 添加日志到主窗口中
 func (f *TFrm_server) addLog(msg string) {
 	vcl.ThreadSync(func() {
-		now := time.Now().Format("2006-01-02 15:04:05")
-		f.Mmo_run_log.Lines().Add(fmt.Sprintf("%s %s", now, msg))
+		// now := time.Now().Format("2006-01-02 15:04:05")
+		f.Mmo_run_log.Lines().Add(msg)
 
 		if f.Mmo_run_log.Lines().Count() > f.ShowLogCount {
 			f.Mmo_run_log.Lines().Delete(0)
@@ -225,11 +225,14 @@ func (f *TFrm_server) addLog(msg string) {
 	})
 }
 
-func (f *TFrm_server) Monitor(msgChan chan string) {
-	go func() {
+func (f *TFrm_server) Monitor(ctx context.Context, msgChan chan string) {
+	go func(_ context.Context) {
 		for msg := range msgChan {
-			f.addLog(strings.TrimSpace(msg))
-			f.sugar.Info(strings.TrimSpace(msg))
+			datas := strings.Split(msg, "\n\t")
+			for _, data := range datas {
+				f.addLog(data)
+				f.sugar.Info(data)
+			}
 		}
-	}()
+	}(ctx)
 }

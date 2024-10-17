@@ -8,12 +8,13 @@ import (
 )
 
 type Server struct {
-	Code    int64      `gorm:"-" json:"code"`                                                         // 编码
-	ID      int64      `gorm:"column:id;primaryKey;autoIncrement:false;type:int" json:"id" form:"id"` // 编码
-	Name    string     `gorm:"column:name;size:255;not null;comment:名称" json:"name" form:"name"`      // 名称
-	Path    string     `gorm:"column:path;size:255;not null;comment:路径" json:"path" form:"path"`      // 路径
-	Params  ServerArgs `gorm:"column:params;type:text;comment:参数" json:"params" form:"params"`        // 参数
-	Plugins Plugins    `gorm:"column:plugins;type:text;comment:插件" json:"plugins" form:"plugins"`     // 插件
+	Code        int64      `gorm:"-" json:"code"`                                                                      // 编码
+	ID          int64      `gorm:"column:id;primaryKey;autoIncrement:false;type:int" json:"id" form:"id"`              // 编码
+	Name        string     `gorm:"column:name;size:255;not null;comment:名称" json:"name" form:"name"`                   // 名称
+	Path        string     `gorm:"column:path;size:255;not null;comment:路径" json:"path" form:"path"`                   // 路径
+	CloseScript string     `gorm:"column:close_script;type:text;comment:关闭脚本" json:"close_script" form:"close_script"` // 关闭脚本
+	Params      ServerArgs `gorm:"column:params;type:text;comment:参数" json:"params" form:"params"`                     // 参数
+	Plugins     Plugins    `gorm:"column:plugins;type:text;comment:插件" json:"plugins" form:"plugins"`                  // 插件
 }
 
 func (srv *Server) ToJson() string {
