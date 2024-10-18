@@ -61,13 +61,13 @@ func (f *PluginBtn) OpenPlugin() {
 	// vcl.ShowMessage(f.Info.Name)
 	f.ctx, f.cancel = context.WithCancel(context.Background())
 	path := filepath.Join(global.ROOT_PATH, "plugins", f.Info.Process)
-	msgChan, err := helper_cmd.Run(0)(f.ctx, false, path)
+	runResult, err := helper_cmd.Run(0)(f.ctx, false, path)
 	if err != nil {
 		vcl.ShowMessage(err.Error())
 	}
 
 	go func() {
-		for msg := range msgChan {
+		for msg := range runResult.Msg {
 			global.Sugared.Debugf("Plugin %s: %s", f.Info.Name, msg)
 		}
 	}()

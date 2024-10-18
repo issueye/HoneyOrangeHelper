@@ -5,7 +5,6 @@ import (
 	"HoneyOrangeHelper/internal/global"
 	"HoneyOrangeHelper/internal/gow32"
 	"HoneyOrangeHelper/internal/helper_cmd"
-	"HoneyOrangeHelper/pkg/utils"
 	"context"
 	"fmt"
 	"strings"
@@ -15,7 +14,6 @@ import (
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -27,6 +25,8 @@ func NewServerForm(owner vcl.IComponent, parent vcl.IWinControl, data *config.Se
 	page.SetBorderStyle(types.BsNone)
 	page.Pnl_actions.SetAlignment(types.TaLeftJustify)
 	page.SetData(data)
+	page.ServerMessage = make(chan string, 100)
+	page.Monitor()
 	return page
 }
 
@@ -41,6 +41,8 @@ type TFrm_serverFields struct {
 	sugar            *zap.SugaredLogger
 	PluginBtns       []*PluginBtn
 	lumberJackLogger *lumberjack.Logger
+	runResult        *helper_cmd.RunResult
+	ServerMessage    chan string
 }
 
 func (f *TFrm_server) OnFormCreate(sender vcl.IObject) {
@@ -132,30 +134,6 @@ func (f *TFrm_server) OnBtn_server_runClick(sender vcl.IObject) {
 	}
 }
 
-func (f *TFrm_server) InitLogger() {
-	path := fmt.Sprintf("%s/logs/%d", global.ROOT_PATH, f.data.Code)
-	utils.IsExistsCreatePath(fmt.Sprintf("%s/logs", global.ROOT_PATH), fmt.Sprintf("%d", f.data.Code))
-
-	fp := path + "/server.log"
-
-	f.lumberJackLogger = &lumberjack.Logger{
-		Filename:   fp,
-		MaxSize:    100, // megabytes
-		MaxBackups: 10,
-		MaxAge:     28, // days
-		Compress:   true,
-	}
-
-	writerSyncer := zapcore.AddSync(f.lumberJackLogger)
-	encoder := zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
-
-	core := zapcore.NewCore(encoder, writerSyncer, zapcore.DebugLevel)
-	logger := zap.New(core)
-
-	f.log = logger
-	f.sugar = logger.Sugar()
-}
-
 func (f *TFrm_server) StopServer() {
 	f.addLog("停止服务中...")
 
@@ -168,9 +146,14 @@ func (f *TFrm_server) StopServer() {
 		}
 	}
 
-	f.cancel()
+	p := &Process{msg: f.ServerMessage}
+	err := p.killProcessAndChildren(f.runResult.Pid)
+	if err != nil {
+		f.addLog(fmt.Sprintf("停止服务失败: %s", err.Error()))
+	}
 
 	if f.log != nil {
+		// f.addLog("服务已停止...")
 		f.log.Info("服务已停止")
 		f.log.Sync()
 		f.log = nil
@@ -178,6 +161,8 @@ func (f *TFrm_server) StopServer() {
 
 		f.lumberJackLogger.Close()
 	}
+
+	f.cancel()
 }
 
 func (f *TFrm_server) RunServer() {
@@ -193,12 +178,14 @@ func (f *TFrm_server) RunServer() {
 
 	f.InitLogger()
 
-	msgChan, err := helper_cmd.Run(100)(f.ctx, true, f.data.Path, params...)
+	var err error
+	f.runResult, err = helper_cmd.Run(200)(f.ctx, true, f.data.Path, params...)
 	if err != nil {
 		f.addLog(err.Error())
+		return
 	}
 
-	f.Monitor(f.ctx, msgChan)
+	f.RunMonitor(f.ctx, f.runResult.Msg)
 }
 
 func (f *TFrm_server) InitData() {
@@ -225,14 +212,31 @@ func (f *TFrm_server) addLog(msg string) {
 	})
 }
 
-func (f *TFrm_server) Monitor(ctx context.Context, msgChan chan string) {
+func (f *TFrm_server) RunMonitor(ctx context.Context, msgChan chan string) {
 	go func(_ context.Context) {
-		for msg := range msgChan {
-			datas := strings.Split(msg, "\n\t")
-			for _, data := range datas {
-				f.addLog(data)
-				f.sugar.Info(data)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg := <-msgChan:
+				if msg != "" {
+					datas := strings.Split(msg, "\n\t")
+					for _, data := range datas {
+						f.addLog(data)
+						if f.sugar != nil {
+							f.sugar.Info(data)
+						}
+					}
+				}
 			}
 		}
 	}(ctx)
+}
+
+func (f *TFrm_server) Monitor() {
+	go func() {
+		for msg := range f.ServerMessage {
+			f.addLog(msg)
+		}
+	}()
 }

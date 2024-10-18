@@ -12,13 +12,13 @@ BEGIN
     BEGIN
         BLOCK "040904B0"
         BEGIN
-			VALUE "CompanyName", "HoneyOrangeHelper server"
-			VALUE "FileDescription", "HoneyOrangeHelper server"
+			VALUE "CompanyName", "HoneyOrange"
+			VALUE "FileDescription", "HoneyOrange"
 			VALUE "FileVersion", "1.0.0.0"
-			VALUE "InternalName", "HoneyOrangeHelper server"
-			VALUE "LegalCopyright", "Copyright (C) HoneyOrangeHelper ."
-			VALUE "OriginalFilename", "HoneyOrangeHelper server"
-			VALUE "ProductName", "HoneyOrangeHelper server"
+			VALUE "InternalName", "HoneyOrange"
+			VALUE "LegalCopyright", "Copyright (C) HoneyOrange ."
+			VALUE "OriginalFilename", "HoneyOrange"
+			VALUE "ProductName", "HoneyOrange"
 			VALUE "ProductVersion", "1.0.0.0"
         END
     END

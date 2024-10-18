@@ -9,10 +9,16 @@ import (
 	"syscall"
 )
 
-type RunFunc func(ctx context.Context, isSetWorkSpace bool, path string, args ...string) (chan string, error)
+type RunResult struct {
+	Msg     chan string
+	Pid     int
+	Process *os.Process
+}
+
+type RunFunc func(ctx context.Context, isSetWorkSpace bool, path string, args ...string) (*RunResult, error)
 
 func Run(chanLen int) RunFunc {
-	return func(ctx context.Context, isSetWorkSpace bool, path string, args ...string) (chan string, error) {
+	return func(ctx context.Context, isSetWorkSpace bool, path string, args ...string) (*RunResult, error) {
 		cmd := exec.CommandContext(ctx, path, args...)
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 
@@ -46,10 +52,15 @@ func Run(chanLen int) RunFunc {
 			chanLen = 20
 		}
 
-		msgChannel := make(chan string, chanLen)
-		go io.Copy(&appLogWriter{msgChannel: msgChannel}, stderr)
-		go io.Copy(&appLogWriter{msgChannel: msgChannel}, stdout)
+		rRes := &RunResult{
+			Pid:     cmd.Process.Pid,
+			Process: cmd.Process,
+			Msg:     make(chan string, chanLen),
+		}
 
-		return msgChannel, nil
+		go io.Copy(&appLogWriter{msgChannel: rRes.Msg}, stderr)
+		go io.Copy(&appLogWriter{msgChannel: rRes.Msg}, stdout)
+
+		return rRes, nil
 	}
 }
