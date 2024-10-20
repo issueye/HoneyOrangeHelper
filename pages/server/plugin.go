@@ -64,6 +64,7 @@ func (f *PluginBtn) OpenPlugin() {
 	runResult, err := helper_cmd.Run(0)(f.ctx, false, path)
 	if err != nil {
 		vcl.ShowMessage(err.Error())
+		return
 	}
 
 	go func() {

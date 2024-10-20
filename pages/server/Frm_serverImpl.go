@@ -130,42 +130,54 @@ func (f *TFrm_server) OnBtn_server_runClick(sender vcl.IObject) {
 		f.IsRunning = true
 		f.Btn_server_run.SetImageIndex(1)
 		f.Btn_server_run.SetCaption("停止")
-		f.RunServer()
+		err := f.RunServer()
+		if err != nil {
+			f.addLog("启动失败：" + err.Error())
+			f.IsRunning = false
+			f.Btn_server_run.SetImageIndex(0)
+			f.Btn_server_run.SetCaption("启动")
+		}
 	}
 }
 
 func (f *TFrm_server) StopServer() {
-	f.addLog("停止服务中...")
+
+	defer func() {
+		if f.log != nil {
+			// f.addLog("服务已停止...")
+			f.log.Info("服务已停止")
+			f.log.Sync()
+			f.log = nil
+			f.sugar = nil
+
+			f.lumberJackLogger.Close()
+		}
+
+		defer f.cancel()
+	}()
+
+	f.ServerMessage <- "停止服务中..."
 
 	if f.data.CloseScript != "" {
-		f.addLog("执行关闭脚本...")
-		f.addLog(fmt.Sprintf("脚本路径: %s", f.data.CloseScript))
+		f.ServerMessage <- "执行关闭脚本..."
+		f.ServerMessage <- fmt.Sprintf("脚本路径: %s", f.data.CloseScript)
+
 		_, err := helper_cmd.Run(20)(f.ctx, true, f.data.CloseScript)
 		if err != nil {
-			f.addLog(err.Error())
+			f.ServerMessage <- fmt.Sprintf("执行关闭脚本失败: %s", err.Error())
+			return
 		}
 	}
 
 	p := &Process{msg: f.ServerMessage}
 	err := p.killProcessAndChildren(f.runResult.Pid)
 	if err != nil {
-		f.addLog(fmt.Sprintf("停止服务失败: %s", err.Error()))
+		f.ServerMessage <- fmt.Sprintf("停止服务失败: %s", err.Error())
+		return
 	}
-
-	if f.log != nil {
-		// f.addLog("服务已停止...")
-		f.log.Info("服务已停止")
-		f.log.Sync()
-		f.log = nil
-		f.sugar = nil
-
-		f.lumberJackLogger.Close()
-	}
-
-	f.cancel()
 }
 
-func (f *TFrm_server) RunServer() {
+func (f *TFrm_server) RunServer() error {
 	f.Mmo_run_log.Clear()
 
 	f.ctx, f.cancel = context.WithCancel(context.Background())
@@ -181,11 +193,12 @@ func (f *TFrm_server) RunServer() {
 	var err error
 	f.runResult, err = helper_cmd.Run(200)(f.ctx, true, f.data.Path, params...)
 	if err != nil {
-		f.addLog(err.Error())
-		return
+		return err
+
 	}
 
 	f.RunMonitor(f.ctx, f.runResult.Msg)
+	return nil
 }
 
 func (f *TFrm_server) InitData() {

@@ -48,16 +48,35 @@ func (f *TFrmHome) OnFormCreate(sender vcl.IObject) {
 }
 
 func (f *TFrmHome) EventMonitor() {
-	messages, err := global.PubSub.Subscribe(context.Background(), global.TOPIC_SERVER_REMOVE)
+	removeMessages, err := global.PubSub.Subscribe(context.Background(), global.TOPIC_SERVER_REMOVE)
 	if err != nil {
 		return
 	}
+
+	indexMessages, err := global.PubSub.Subscribe(context.Background(), global.TOPIC_SERVER_INDEX)
+	if err != nil {
+		return
+	}
+
 	go func() {
-		for msgInfo := range messages {
-			err := f.closeItem(msgInfo)
-			if err != nil {
-				global.Sugared.Errorf("关闭项目失败 %s", err.Error())
-				continue
+		for {
+			select {
+			case msg := <-removeMessages:
+				{
+					err = f.closeItem(msg)
+					if err != nil {
+						global.Sugared.Errorf("关闭项目失败 %s", err.Error())
+						continue
+					}
+				}
+			case msg := <-indexMessages:
+				{
+					err = f.indexItem(msg)
+					if err != nil {
+						global.Sugared.Errorf("选择项目失败 %s", err.Error())
+						continue
+					}
+				}
 			}
 		}
 	}()
@@ -84,6 +103,26 @@ func (f *TFrmHome) closeItem(msgInfo *message.Message) error {
 	return nil
 }
 
+func (f *TFrmHome) indexItem(msgInfo *message.Message) error {
+	defer msgInfo.Ack()
+
+	data := string(msgInfo.Payload)
+	cfg, err := config.FromToJson(data)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range f.SrvList {
+		if cfg.Code == item.Info.Code {
+			item.Frm.Btn_item.SetImageIndex(0)
+		} else {
+			item.Frm.Btn_item.SetImageIndex(-1)
+		}
+	}
+
+	return nil
+}
+
 func (f *TFrmHome) InitData() {
 	f.ActiveItem = 0
 	f.SrvList = make([]*SrvObject, 0)
@@ -101,6 +140,7 @@ func (f *TFrmHome) InitData() {
 	if len(f.SrvList) > 0 {
 		f.ActiveItem = f.SrvList[0].Info.Code
 		f.SrvList[0].Frm.OnBtn_itemClick(nil)
+		f.SrvList[0].Frm.Btn_item.SetImageIndex(0)
 	}
 }
 

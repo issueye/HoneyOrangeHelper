@@ -15,10 +15,10 @@ func NewItemForm(owner vcl.IComponent, Id int64, parent vcl.IWinControl, body vc
 	page.data = data
 	page.Id = Id
 	page.BodyPnl = body
+	page.Btn_item.SetImageIndex(-1)
 	page.SetParent(parent)
 	page.SetAlign(types.AlLeft)
 	page.SetBorderStyle(types.BsNone)
-	page.Btn_remove.SetVisible(false)
 	page.ServerForm = NewServerForm(owner, body, data)
 	return page
 }
@@ -51,19 +51,15 @@ func (f *TFrm_server_item) InitData() {
 func (f *TFrm_server_item) SetEvents() {
 	f.SetOnShow(f.OnFormShow)
 	f.Btn_item.SetOnClick(f.OnBtn_itemClick)
-	f.Btn_remove.SetOnClick(f.OnImg_removeClick)
 	f.SetOnDestroy(f.OnFormDestroy)
 }
 
 func (f *TFrm_server_item) OnBtn_itemClick(sender vcl.IObject) {
+	msg := message.NewMessage(watermill.NewUUID(), message.Payload(f.data.ToJson()))
+	global.PubSub.Publish(global.TOPIC_SERVER_INDEX, msg)
 	f.ServerForm.Show()
 }
 
 func (f *TFrm_server_item) OnFormDestroy(sender vcl.IObject) {
 	f.ServerForm.Close()
-}
-
-func (f *TFrm_server_item) OnImg_removeClick(sender vcl.IObject) {
-	msg := message.NewMessage(watermill.NewUUID(), []byte(f.data.ToJson()))
-	global.PubSub.Publish(global.TOPIC_SERVER_REMOVE, msg)
 }
