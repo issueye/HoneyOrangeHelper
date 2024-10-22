@@ -49,3 +49,26 @@ func (args *Plugins) Scan(value interface{}) error {
 func (arr *Plugins) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, (*[]*Plugin)(arr))
 }
+
+type Event struct {
+	IsCheck bool   `json:"is_check"` // is_check
+	Name    string `json:"name"`     // name
+	Title   string `json:"title"`    // title
+	Mark    string `json:"mark"`     // mark
+}
+
+type Events []*Event
+
+// 存入数据库
+func (args Events) Value() (driver.Value, error) {
+	return json.Marshal(args)
+}
+
+// 从数据库取数据
+func (args *Events) Scan(value interface{}) error {
+	return json.Unmarshal(value.([]byte), args)
+}
+
+func (arr *Events) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, (*[]*Event)(arr))
+}

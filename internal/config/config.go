@@ -164,5 +164,6 @@ func initConfig() {
 	configDB.AutoMigrate(
 		&Param{},
 		&Server{},
+		&ToolPlugin{},
 	)
 }

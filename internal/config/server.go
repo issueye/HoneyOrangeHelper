@@ -22,7 +22,7 @@ func (srv *Server) ToJson() string {
 	return string(data)
 }
 
-func FromToJson(jsonStr string) (*Server, error) {
+func (Server) FromToJson(jsonStr string) (*Server, error) {
 	var server Server
 	err := json.Unmarshal([]byte(jsonStr), &server)
 	return &server, err

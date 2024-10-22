@@ -202,6 +202,8 @@ func (f *TFrm_server) RunServer() error {
 }
 
 func (f *TFrm_server) InitData() {
+	f.SetShowHint(true)
+	f.Btn_server_run.SetShowCaption(false)
 	f.PluginBtns = make([]*PluginBtn, 0)
 	f.IsRunning = false
 	f.ShowLogCount = 1000

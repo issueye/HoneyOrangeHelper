@@ -7,7 +7,7 @@ import (
 	"github.com/ying32/govcl/vcl/types"
 )
 
-func NewPluginForm(owner vcl.IComponent) *TFrm_plugin {
+func NewPlugin(owner vcl.IComponent) *TFrm_plugin {
 	if Frm_plugin == nil {
 		Frm_plugin = NewFrm_plugin(owner)
 	}
@@ -17,11 +17,11 @@ func NewPluginForm(owner vcl.IComponent) *TFrm_plugin {
 
 // ::private::
 type TFrm_pluginFields struct {
-	list []*config.Server
+	list []*config.ToolPlugin
 }
 
 func (f *TFrm_plugin) OnFormCreate(sender vcl.IObject) {
-	f.list = make([]*config.Server, 0)
+	f.list = make([]*config.ToolPlugin, 0)
 
 	f.SetEvents()
 }
@@ -34,9 +34,9 @@ func (f *TFrm_plugin) SetEvents() {
 }
 
 func (f *TFrm_plugin) OnBtn_addClick(sender vcl.IObject) {
-	// page := NewServerManaForm(f, 0, nil)
-	// page.ShowModal()
-	// f.GetData()
+	page := NewPluginForm(f, 0, nil)
+	page.ShowModal()
+	f.GetData()
 }
 
 func (f *TFrm_plugin) OnBtn_queryClick(sender vcl.IObject) {
@@ -52,7 +52,7 @@ func (f *TFrm_plugin) OnTable_dataButtonClick(sender vcl.IObject, col, row int32
 	if col == 3 {
 		rt := vcl.MessageDlg("确定要删除吗？", types.MtWarning, types.MbYes, types.MbNo)
 		if rt == 6 {
-			config.DeleteServer(f.list[row-1].ID)
+			config.DeleteToolPlugin(f.list[row-1].ID)
 			f.GetData()
 			return
 		}
@@ -60,7 +60,7 @@ func (f *TFrm_plugin) OnTable_dataButtonClick(sender vcl.IObject, col, row int32
 
 	// 如果是修改按钮，则弹出修改窗口
 	if col == 2 {
-		NewServerManaForm(f, 1, f.list[row-1]).ShowModal()
+		NewPluginForm(f, 1, f.list[row-1]).ShowModal()
 		f.GetData()
 	}
 }
@@ -72,7 +72,7 @@ func (f *TFrm_plugin) GetData() {
 	f.Table_data.Clear()
 	f.Table_data.SetRowCount(2)
 
-	list, err := config.GetServerList(f.Edt_condition.Text())
+	list, err := config.GetToolPluginList(f.Edt_condition.Text())
 	if err != nil {
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"HoneyOrangeHelper/internal/config"
 	"HoneyOrangeHelper/internal/global"
 	"HoneyOrangeHelper/pages/about"
+	"HoneyOrangeHelper/pages/plugin"
 	"HoneyOrangeHelper/pages/server"
 	"HoneyOrangeHelper/pages/settings"
 	"HoneyOrangeHelper/pkg/utils"
@@ -86,7 +87,7 @@ func (f *TFrmHome) closeItem(msgInfo *message.Message) error {
 	defer msgInfo.Ack()
 
 	data := string(msgInfo.Payload)
-	cfg, err := config.FromToJson(data)
+	cfg, err := config.Server{}.FromToJson(data)
 	if err != nil {
 		return err
 	}
@@ -107,7 +108,7 @@ func (f *TFrmHome) indexItem(msgInfo *message.Message) error {
 	defer msgInfo.Ack()
 
 	data := string(msgInfo.Payload)
-	cfg, err := config.FromToJson(data)
+	cfg, err := config.Server{}.FromToJson(data)
 	if err != nil {
 		return err
 	}
@@ -164,6 +165,7 @@ func (f *TFrmHome) SetEvents() {
 	f.Meu_item_about.SetOnClick(f.OnAboutClick)
 	f.Meu_log_settings.SetOnClick(f.OnMeu_log_settingsClick)
 	f.Meu_server_mana.SetOnClick(f.OnMeu_server_manaClick)
+	f.Meu_plugin_mana.SetOnClick(f.OnMeu_plugin_manaClick)
 
 	f.PM_close.SetOnClick(f.OnAppCloseClick)
 	f.PM_show.SetOnClick(f.OnAppShowClick)
@@ -210,6 +212,11 @@ func (f *TFrmHome) OnMeu_log_settingsClick(sender vcl.IObject) {
 func (f *TFrmHome) OnMeu_server_manaClick(sender vcl.IObject) {
 	page := server.NewFrm_server_qry(f)
 	page.SetPosition(types.PoOwnerFormCenter)
+	page.ShowModal()
+}
+
+func (f *TFrmHome) OnMeu_plugin_manaClick(sender vcl.IObject) {
+	page := plugin.NewPlugin(f)
 	page.ShowModal()
 }
 

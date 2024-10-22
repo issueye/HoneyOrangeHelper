@@ -20,6 +20,7 @@ type TFrmHome struct {
 	Meu_log_settings *vcl.TMenuItem
 	Meu_server       *vcl.TMenuItem
 	Meu_server_mana  *vcl.TMenuItem
+	Meu_plugin_mana  *vcl.TMenuItem
 	Meu_item_help    *vcl.TMenuItem
 	Meu_item_about   *vcl.TMenuItem
 	Timer            *vcl.TTimer
