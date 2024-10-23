@@ -34,6 +34,34 @@ type TFrm_plugin_formFields struct {
 
 func (f *TFrm_plugin_form) ResetData() {
 	f.Edt_name.Clear()
+	f.Edt_process_path.Clear()
+
+	f.Table_event.SetRowCount(6)
+
+	f.Table_event.SetCells(0, 1, "0")
+	f.Table_event.SetCells(1, 1, "server_start")
+	f.Table_event.SetCells(2, 1, "服务启动")
+	f.Table_event.SetCells(3, 1, "启动服务时进行推送")
+
+	f.Table_event.SetCells(0, 2, "0")
+	f.Table_event.SetCells(1, 2, "server_stop")
+	f.Table_event.SetCells(2, 2, "服务停止")
+	f.Table_event.SetCells(3, 2, "停止服务时进行推送")
+
+	f.Table_event.SetCells(0, 3, "0")
+	f.Table_event.SetCells(1, 3, "server_setting_ok")
+	f.Table_event.SetCells(2, 3, "服务设置完成")
+	f.Table_event.SetCells(3, 3, "设置服务信息完成时进行推送")
+
+	f.Table_event.SetCells(0, 4, "0")
+	f.Table_event.SetCells(1, 4, "server_remove")
+	f.Table_event.SetCells(2, 4, "服务移除")
+	f.Table_event.SetCells(3, 4, "移除服务时进行推送")
+
+	f.Table_event.SetCells(0, 5, "0")
+	f.Table_event.SetCells(1, 5, "server_add")
+	f.Table_event.SetCells(2, 5, "服务添加")
+	f.Table_event.SetCells(3, 5, "添加服务时进行推送")
 }
 
 func (f *TFrm_plugin_form) SetData(data *config.ToolPlugin) {
@@ -58,7 +86,10 @@ func (f *TFrm_plugin_form) SetData(data *config.ToolPlugin) {
 		f.Table_event.SetCells(1, row, v.Name)
 		f.Table_event.SetCells(2, row, v.Title)
 		f.Table_event.SetCells(3, row, v.Mark)
-		f.Table_event.SetRowCount(f.Table_event.RowCount() + 1)
+
+		if !(index == len(f.data.Events)-1) {
+			f.Table_event.SetRowCount(f.Table_event.RowCount() + 1)
+		}
 	}
 }
 
