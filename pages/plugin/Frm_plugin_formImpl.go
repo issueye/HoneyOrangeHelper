@@ -180,5 +180,6 @@ func (f *TFrm_plugin_form) SaveData() {
 func (f *TFrm_plugin_form) OnBtn_saveClick(sender vcl.IObject) {
 	// 将数据保存到数据库中
 	f.SaveData()
+	f.SetModalResult(types.MrOk)
 	f.Close()
 }

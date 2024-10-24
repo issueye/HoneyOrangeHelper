@@ -3,6 +3,7 @@ package server
 import (
 	"HoneyOrangeHelper/internal/config"
 	"HoneyOrangeHelper/internal/global"
+	"context"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -10,7 +11,7 @@ import (
 	"github.com/ying32/govcl/vcl/types"
 )
 
-func NewItemForm(owner vcl.IComponent, Id int64, parent vcl.IWinControl, body vcl.IWinControl, data *config.Server) *TFrm_server_item {
+func NewItemForm(ctx context.Context, owner vcl.IComponent, Id int64, parent vcl.IWinControl, body vcl.IWinControl, data *config.Server) *TFrm_server_item {
 	page := NewFrm_server_item(owner)
 	page.data = data
 	page.Id = Id
@@ -19,7 +20,7 @@ func NewItemForm(owner vcl.IComponent, Id int64, parent vcl.IWinControl, body vc
 	page.SetParent(parent)
 	page.SetAlign(types.AlLeft)
 	page.SetBorderStyle(types.BsNone)
-	page.ServerForm = NewServerForm(owner, body, data)
+	page.ServerForm = NewServerForm(ctx, owner, body, data)
 	return page
 }
 
@@ -29,6 +30,14 @@ type TFrm_server_itemFields struct {
 	data       *config.Server
 	ServerForm *TFrm_server
 	BodyPnl    vcl.IWinControl
+}
+
+func (f *TFrm_server_item) RunServer() {
+	f.ServerForm.RunServer()
+}
+
+func (f *TFrm_server_item) StopServer() {
+	f.ServerForm.StopServer()
 }
 
 func (f *TFrm_server_item) CloseWindow() {

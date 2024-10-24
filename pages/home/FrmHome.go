@@ -10,25 +10,26 @@ import (
 
 type TFrmHome struct {
 	*vcl.TForm
-	StatusBar        *vcl.TStatusBar
-	Pnl_body         *vcl.TPanel
-	Pnl_items        *vcl.TPanel
-	Btn_server_add   *vcl.TSpeedButton
-	Sb_box           *vcl.TScrollBox
-	Main_menu        *vcl.TMainMenu
-	Meu_settings     *vcl.TMenuItem
-	Meu_log_settings *vcl.TMenuItem
-	Meu_server       *vcl.TMenuItem
-	Meu_server_mana  *vcl.TMenuItem
-	Meu_plugin_mana  *vcl.TMenuItem
-	Meu_item_help    *vcl.TMenuItem
-	Meu_item_about   *vcl.TMenuItem
-	Timer            *vcl.TTimer
-	Tray_icon        *vcl.TTrayIcon
-	P_menu           *vcl.TPopupMenu
-	PM_show          *vcl.TMenuItem
-	PM_close         *vcl.TMenuItem
-	ImageList1       *vcl.TImageList
+	StatusBar            *vcl.TStatusBar
+	Pnl_body             *vcl.TPanel
+	Pnl_items            *vcl.TPanel
+	Btn_server_add       *vcl.TSpeedButton
+	Sb_box               *vcl.TScrollBox
+	Main_menu            *vcl.TMainMenu
+	Meu_settings         *vcl.TMenuItem
+	Meu_log_settings     *vcl.TMenuItem
+	Meu_server           *vcl.TMenuItem
+	Meu_server_mana      *vcl.TMenuItem
+	Meu_plugin_mana      *vcl.TMenuItem
+	Meu_item_help        *vcl.TMenuItem
+	Meu_item_about       *vcl.TMenuItem
+	Timer                *vcl.TTimer
+	Tray_icon            *vcl.TTrayIcon
+	P_menu               *vcl.TPopupMenu
+	PM_show              *vcl.TMenuItem
+	PM_close             *vcl.TMenuItem
+	ImageList1           *vcl.TImageList
+	Meu_tool_plugin_mana *vcl.TMenuItem
 
 	// ::private::
 	TFrmHomeFields

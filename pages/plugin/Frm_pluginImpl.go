@@ -2,7 +2,10 @@ package plugin
 
 import (
 	"HoneyOrangeHelper/internal/config"
+	"HoneyOrangeHelper/internal/global"
 
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
 )
@@ -31,12 +34,18 @@ func (f *TFrm_plugin) SetEvents() {
 	f.Btn_query.SetOnClick(f.OnBtn_queryClick)
 	f.Btn_add.SetOnClick(f.OnBtn_addClick)
 	f.Table_data.SetOnButtonClick(f.OnTable_dataButtonClick)
+	f.Btn_refresh_home_menu.SetOnClick(f.OnBtn_refresh_home_menuClick)
 }
 
 func (f *TFrm_plugin) OnBtn_addClick(sender vcl.IObject) {
 	page := NewPluginForm(f, 0, nil)
 	page.ShowModal()
 	f.GetData()
+}
+
+func (f *TFrm_plugin) OnBtn_refresh_home_menuClick(sender vcl.IObject) {
+	msg := message.NewMessage(watermill.NewUUID(), message.Payload([]byte{}))
+	global.PubSub.Publish(global.TOPIC_SERVER_REFRESH_TOOL_PLUGIN, msg)
 }
 
 func (f *TFrm_plugin) OnBtn_queryClick(sender vcl.IObject) {

@@ -1,15 +1,13 @@
 rmdir /s/q vendor
 
-set GOPROXY=https://goproxy.cn
+set GOPROXY=https://goproxy.io,direct
 
-set GOPRIVATE=golang.corp.yxkj.com
+set http_proxy=http://127.0.0.1:7897
+set https_proxy=http://127.0.0.1:7897
 
 :: 强制更新代码
-:: go get -u golang.corp.yxkj.com/orange/common
-:: go get -u golang.corp.yxkj.com/orange/pkg
-:: go get -u golang.corp.yxkj.com/orange/yhLineServer/internal/common
-:: go get -u golang.corp.yxkj.com/orange/plugins
-:: go get -u golang.corp.yxkj.com/orange/convert
+go get -u github.com/issueye/ipc_grpc@v1.0.2
+
 :: 更新依赖
 go mod tidy
 :: 更新本地依赖

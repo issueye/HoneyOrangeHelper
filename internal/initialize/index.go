@@ -9,4 +9,5 @@ func Init() {
 	config.InitConfig()
 	InitLogger()
 	InitEvetnBus()
+	InitPlugin()
 }

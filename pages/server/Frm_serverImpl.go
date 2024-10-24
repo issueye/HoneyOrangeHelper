@@ -7,17 +7,19 @@ import (
 	"HoneyOrangeHelper/internal/helper_cmd"
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/issueye/ipc_grpc/grpc/pb"
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
 	"go.uber.org/zap"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func NewServerForm(owner vcl.IComponent, parent vcl.IWinControl, data *config.Server) *TFrm_server {
+func NewServerForm(ctx context.Context, owner vcl.IComponent, parent vcl.IWinControl, data *config.Server) *TFrm_server {
 	page := NewFrm_server(owner)
 	page.data = data
 	page.SetParent(parent)
@@ -26,7 +28,7 @@ func NewServerForm(owner vcl.IComponent, parent vcl.IWinControl, data *config.Se
 	page.Pnl_actions.SetAlignment(types.TaLeftJustify)
 	page.SetData(data)
 	page.ServerMessage = make(chan string, 100)
-	page.Monitor()
+	page.Monitor(ctx)
 	return page
 }
 
@@ -122,27 +124,28 @@ func (f *TFrm_server) OnBtn_remove_serverClick(sender vcl.IObject) {
 
 func (f *TFrm_server) OnBtn_server_runClick(sender vcl.IObject) {
 	if f.IsRunning {
-		f.IsRunning = false
-		f.Btn_server_run.SetImageIndex(0)
-		f.Btn_server_run.SetCaption("启动")
 		f.StopServer()
 	} else {
-		f.IsRunning = true
-		f.Btn_server_run.SetImageIndex(1)
-		f.Btn_server_run.SetCaption("停止")
-		err := f.RunServer()
-		if err != nil {
-			f.addLog("启动失败：" + err.Error())
-			f.IsRunning = false
-			f.Btn_server_run.SetImageIndex(0)
-			f.Btn_server_run.SetCaption("启动")
-		}
+		f.RunServer()
 	}
 }
 
 func (f *TFrm_server) StopServer() {
+	f.IsRunning = false
+	f.Btn_server_run.SetImageIndex(0)
+	f.Btn_server_run.SetCaption("启动")
 
 	defer func() {
+		defer f.cancel()
+
+		code := strconv.FormatInt(f.data.Code, 10)
+		global.PluginSrv.Events.PushEvent(code, pb.EventType_ET_STOP, &pb.ServerInfo{
+			Id:          code,
+			Name:        f.data.Name,
+			ProcessName: f.data.Path,
+			State:       pb.StateType_ST_STOP,
+		})
+
 		if f.log != nil {
 			// f.addLog("服务已停止...")
 			f.log.Info("服务已停止")
@@ -152,8 +155,6 @@ func (f *TFrm_server) StopServer() {
 
 			f.lumberJackLogger.Close()
 		}
-
-		defer f.cancel()
 	}()
 
 	f.ServerMessage <- "停止服务中..."
@@ -180,6 +181,28 @@ func (f *TFrm_server) StopServer() {
 func (f *TFrm_server) RunServer() error {
 	f.Mmo_run_log.Clear()
 
+	var err error
+	defer func() {
+		f.IsRunning = true
+		f.Btn_server_run.SetImageIndex(1)
+		f.Btn_server_run.SetCaption("停止")
+
+		code := strconv.FormatInt(f.data.Code, 10)
+		global.PluginSrv.Events.PushEvent(code, pb.EventType_ET_START, &pb.ServerInfo{
+			Id:          code,
+			Name:        f.data.Name,
+			ProcessName: f.data.Path,
+			State:       pb.StateType_ST_START,
+		})
+
+		if err != nil {
+			f.addLog("启动失败：" + err.Error())
+			f.IsRunning = false
+			f.Btn_server_run.SetImageIndex(0)
+			f.Btn_server_run.SetCaption("启动")
+		}
+	}()
+
 	f.ctx, f.cancel = context.WithCancel(context.Background())
 	params := make([]string, 0)
 	for _, param := range f.data.Params {
@@ -190,7 +213,6 @@ func (f *TFrm_server) RunServer() error {
 
 	f.InitLogger()
 
-	var err error
 	f.runResult, err = helper_cmd.Run(200)(f.ctx, true, f.data.Path, params...)
 	if err != nil {
 		return err
@@ -248,10 +270,15 @@ func (f *TFrm_server) RunMonitor(ctx context.Context, msgChan chan string) {
 	}(ctx)
 }
 
-func (f *TFrm_server) Monitor() {
-	go func() {
-		for msg := range f.ServerMessage {
-			f.addLog(msg)
+func (f *TFrm_server) Monitor(ctx context.Context) {
+	go func(c context.Context) {
+		for {
+			select {
+			case msg := <-f.ServerMessage:
+				f.addLog(msg)
+			case <-c.Done():
+				return
+			}
 		}
-	}()
+	}(ctx)
 }

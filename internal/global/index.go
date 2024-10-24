@@ -1,6 +1,8 @@
 package global
 
 import (
+	"HoneyOrangeHelper/internal/plugin"
+
 	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	"go.uber.org/zap"
 )
@@ -10,11 +12,14 @@ var (
 	PubSub     *gochannel.GoChannel
 	Sugared    *zap.SugaredLogger
 	Logger     *zap.Logger
+	PluginSrv  *plugin.Service
 )
 
 const (
-	TOPIC_CONSOLE_LOG   = "TOPIC_CONSOLE_LOG"
-	TOPIC_SERVER_REMOVE = "TOPIC_SERVER_REMOVE"
-	TOPIC_SERVER_INDEX  = "TOPIC_SERVER_INDEX"
-	ROOT_PATH           = "root"
+	TOPIC_CONSOLE_LOG                = "TOPIC_CONSOLE_LOG"
+	TOPIC_SERVER_REMOVE              = "TOPIC_SERVER_REMOVE"
+	TOPIC_SERVER_INDEX               = "TOPIC_SERVER_INDEX"
+	TOPIC_SERVER_REFRESH_TOOL_PLUGIN = "TOPIC_SERVER_REFRESH_TOOL_PLUGIN"
+	TOPIC_SERVER_HELPER              = "TOPIC_SERVER_HELPER"
+	ROOT_PATH                        = "root"
 )

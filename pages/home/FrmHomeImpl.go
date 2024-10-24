@@ -2,25 +2,28 @@ package home
 
 import (
 	"HoneyOrangeHelper/internal/config"
-	"HoneyOrangeHelper/internal/global"
 	"HoneyOrangeHelper/pages/about"
 	"HoneyOrangeHelper/pages/plugin"
 	"HoneyOrangeHelper/pages/server"
 	"HoneyOrangeHelper/pages/settings"
-	"HoneyOrangeHelper/pkg/utils"
 	"context"
-	"slices"
 	"time"
 
-	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
 )
 
 type SrvObject struct {
-	Id   int64
-	Info *config.Server
-	Frm  *server.TFrm_server_item
+	ctx    context.Context
+	cancel context.CancelFunc
+	Id     int64
+	Info   *config.Server
+	Frm    *server.TFrm_server_item
+}
+
+type ItemMenuObject struct {
+	Menu *vcl.TMenuItem
+	Info *config.ToolPlugin
 }
 
 // ::private::
@@ -29,8 +32,11 @@ type TFrmHomeFields struct {
 	ShowLogCount int32
 	IsTrueClose  bool
 	ActiveItem   int64
+	ctx          context.Context
+	cancel       context.CancelFunc
 
 	SrvList []*SrvObject
+	IMList  []*ItemMenuObject
 }
 
 func (f *TFrmHome) OnFormCreate(sender vcl.IObject) {
@@ -40,119 +46,13 @@ func (f *TFrmHome) OnFormCreate(sender vcl.IObject) {
 	f.Tray_icon.SetVisible(true)
 	f.Tray_icon.SetHint("蜜桔工具")
 
+	f.ctx, f.cancel = context.WithCancel(context.Background())
+
 	f.InitData()
 	f.SetEvents()
 
 	f.Monitor()
-
-	f.EventMonitor()
-}
-
-func (f *TFrmHome) EventMonitor() {
-	removeMessages, err := global.PubSub.Subscribe(context.Background(), global.TOPIC_SERVER_REMOVE)
-	if err != nil {
-		return
-	}
-
-	indexMessages, err := global.PubSub.Subscribe(context.Background(), global.TOPIC_SERVER_INDEX)
-	if err != nil {
-		return
-	}
-
-	go func() {
-		for {
-			select {
-			case msg := <-removeMessages:
-				{
-					err = f.closeItem(msg)
-					if err != nil {
-						global.Sugared.Errorf("关闭项目失败 %s", err.Error())
-						continue
-					}
-				}
-			case msg := <-indexMessages:
-				{
-					err = f.indexItem(msg)
-					if err != nil {
-						global.Sugared.Errorf("选择项目失败 %s", err.Error())
-						continue
-					}
-				}
-			}
-		}
-	}()
-}
-
-func (f *TFrmHome) closeItem(msgInfo *message.Message) error {
-	defer msgInfo.Ack()
-
-	data := string(msgInfo.Payload)
-	cfg, err := config.Server{}.FromToJson(data)
-	if err != nil {
-		return err
-	}
-
-	f.SrvList = slices.DeleteFunc(f.SrvList, func(v *SrvObject) bool {
-		if v.Id == cfg.Code {
-			v.Frm.CloseWindow()
-			return true
-		}
-
-		return false
-	})
-
-	return nil
-}
-
-func (f *TFrmHome) indexItem(msgInfo *message.Message) error {
-	defer msgInfo.Ack()
-
-	data := string(msgInfo.Payload)
-	cfg, err := config.Server{}.FromToJson(data)
-	if err != nil {
-		return err
-	}
-
-	for _, item := range f.SrvList {
-		if cfg.Code == item.Info.Code {
-			item.Frm.Btn_item.SetImageIndex(0)
-		} else {
-			item.Frm.Btn_item.SetImageIndex(-1)
-		}
-	}
-
-	return nil
-}
-
-func (f *TFrmHome) InitData() {
-	f.ActiveItem = 0
-	f.SrvList = make([]*SrvObject, 0)
-
-	list, err := config.GetServerList("")
-	if err != nil {
-		return
-	}
-
-	// 加载到主页面中，添加 PageControl 页面
-	for _, v := range list {
-		f.AppendServer(v)
-	}
-
-	if len(f.SrvList) > 0 {
-		f.ActiveItem = f.SrvList[0].Info.Code
-		f.SrvList[0].Frm.OnBtn_itemClick(nil)
-		f.SrvList[0].Frm.Btn_item.SetImageIndex(0)
-	}
-}
-
-func (f *TFrmHome) AppendServer(cfg *config.Server) {
-	Id := utils.GenID()
-	cfg.Code = Id
-	frm := server.NewItemForm(f, Id, f.Sb_box, f.Pnl_body, cfg)
-	obj := &SrvObject{Info: cfg, Frm: frm}
-	obj.Id = Id
-	f.SrvList = append(f.SrvList, obj)
-	frm.Show()
+	f.EventMonitor(f.ctx)
 }
 
 func (f *TFrmHome) SetEvents() {
@@ -180,12 +80,14 @@ func (f *TFrmHome) OnFormClose(sender vcl.IObject, action *types.TCloseAction) {
 }
 
 func (f *TFrmHome) OnFormDestroy(sender vcl.IObject) {
+	f.cancel()
 }
 
 func (f *TFrmHome) OnAppCloseClick(sender vcl.IObject) {
 	f.IsTrueClose = true
 	for _, srv := range f.SrvList {
 		srv.Frm.Free()
+		srv.cancel()
 	}
 	f.Close()
 }
