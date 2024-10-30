@@ -4,7 +4,6 @@ package plugin
 
 import (
 	_ "embed"
-
 	"github.com/ying32/govcl/vcl"
 )
 
@@ -24,6 +23,8 @@ type TFrm_plugin_form struct {
 	IList            *vcl.TImageList
 	Pm_menu_param    *vcl.TPopupMenu
 	Mi_param_add     *vcl.TMenuItem
+	Edt_cookie_key   *vcl.TLabeledEdit
+	Edt_cookie_value *vcl.TLabeledEdit
 
 	// ::private::
 	TFrm_plugin_formFields

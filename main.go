@@ -9,5 +9,9 @@ import (
 
 func main() {
 	initialize.Init()
-	vcl.RunApp(&home.FrmHome)
+	// vcl.RunApp(&home.FrmHome)
+	vcl.Application.Initialize()
+	vcl.Application.SetMainFormOnTaskBar(true)
+	vcl.Application.CreateForm(&home.FrmHome)
+	vcl.Application.Run()
 }

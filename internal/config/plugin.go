@@ -8,10 +8,12 @@ import (
 )
 
 type ToolPlugin struct {
-	ID     int64  `gorm:"column:id;primaryKey;autoIncrement:false;type:int" json:"id" form:"id"` // 编码
-	Name   string `gorm:"column:name;size:255;not null;comment:名称" json:"name" form:"name"`      // 名称
-	Path   string `gorm:"column:path;size:255;not null;comment:路径" json:"path" form:"path"`      // 路径
-	Events Events `gorm:"column:events;type:text;comment:事件" json:"events" form:"events"`        // 事件
+	ID          int64  `gorm:"column:id;primaryKey;autoIncrement:false;type:int" json:"id" form:"id"`                              // 编码
+	Name        string `gorm:"column:name;size:255;not null;comment:名称" json:"name" form:"name"`                                   // 名称
+	Path        string `gorm:"column:path;size:255;not null;comment:路径" json:"path" form:"path"`                                   // 路径
+	CookieKey   string `gorm:"column:cookie_key;size:255;not null;comment:cookie_key" json:"cookie_key" form:"cookie_key"`         // cookie_key
+	CookieValue string `gorm:"column:cookie_value;size:255;not null;comment:cookie_value" json:"cookie_value" form:"cookie_value"` // cookie_value
+	Events      Events `gorm:"column:events;type:text;comment:事件" json:"events" form:"events"`                                     // 事件
 }
 
 func (srv *ToolPlugin) ToJson() string {

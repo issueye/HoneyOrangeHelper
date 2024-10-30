@@ -8,7 +8,7 @@ require (
 	github.com/ThreeDotsLabs/watermill v1.3.7
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/glebarez/sqlite v1.10.0
-	github.com/issueye/ipc_grpc v1.0.2
+	github.com/issueye/ipc_grpc v1.0.3
 	github.com/spf13/cast v1.5.1
 	github.com/ying32/govcl v2.2.3+incompatible
 	go.uber.org/zap v1.26.0

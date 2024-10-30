@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/issueye/ipc_grpc/grpc/pb"
 	"github.com/issueye/ipc_grpc/server"
@@ -56,6 +57,7 @@ func (c Commands) Len() int {
 }
 
 func (c Commands) Show(key string) {
+	fmt.Printf("key: %s\n", key)
 	command, ok := c.Get(key)
 	if ok {
 		command.CommandStream.Send(&pb.CommandResponse{Command: "show"})
@@ -127,14 +129,19 @@ func (srv *Service) Event(client *pb.ClientRequest, stream pb.HostHelper_EventSe
 		EventStream: stream,
 		Client:      client,
 	})
+
+	select {}
 	return nil
 }
 
 // 事件推送，服务端持续推送事件
 func (srv *Service) Command(client *pb.ClientRequest, tream pb.HostHelper_CommandServer) error {
+	fmt.Println("command", client.CookieKey)
 	srv.Commands.Add(client.CookieKey, &Command{
 		CommandStream: tream,
 		Client:        client,
 	})
+
+	select {}
 	return nil
 }

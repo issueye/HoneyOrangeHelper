@@ -27,8 +27,8 @@ github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
-github.com/issueye/ipc_grpc v1.0.2 h1:esSJ2oYaw5EnysD60I/Gt+MrXttz8svthB0WfjYDGIM=
-github.com/issueye/ipc_grpc v1.0.2/go.mod h1:8mwV9bMCkRJfOLqvAlP2Y7i6zOUuJTa4JXvhD5ROh9A=
+github.com/issueye/ipc_grpc v1.0.3 h1:pwsLAT0r4mcQmpVAJzASnIpZpvQgc+ckGzK/gT87ixc=
+github.com/issueye/ipc_grpc v1.0.3/go.mod h1:8mwV9bMCkRJfOLqvAlP2Y7i6zOUuJTa4JXvhD5ROh9A=
 github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD/E=
 github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkryuEj+Srlc=
 github.com/jinzhu/now v1.1.5 h1:/o9tlHleP7gOFmsnYNz3RGnqzefHA47wQpKrrdTIwXQ=

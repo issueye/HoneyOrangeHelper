@@ -38,6 +38,9 @@ func (f *TFrmHome) InitData() {
 		f.SrvList[0].Frm.Btn_item.SetImageIndex(0)
 	}
 
+}
+
+func (f *TFrmHome) LoadToolPlugins() {
 	// 加载工具插件
 	tpList, err := config.GetToolPluginList("")
 	if err != nil {
@@ -66,16 +69,21 @@ func (f *TFrmHome) AddMenuItem(tp *config.ToolPlugin) {
 		return
 	}
 
+	go func() {
+		for msg := range result.Msg {
+			global.Sugared.Named(tp.Name).Debug(msg)
+		}
+	}()
+
 	imObj.RunResult = result
 	f.IMList = append(f.IMList, imObj)
-
 	menu.SetOnClick(f.MenuItemOnclick(tp))
 }
 
 func (f *TFrmHome) MenuItemOnclick(tp *config.ToolPlugin) func(sender vcl.IObject) {
 	return func(sender vcl.IObject) {
-		vcl.ShowMessage(tp.Name)
-		global.PluginSrv.Commands.Show(strconv.FormatInt(tp.ID, 10))
+		// vcl.ShowMessage(tp.Name)
+		global.PluginSrv.Commands.Show(tp.CookieKey)
 	}
 }
 
@@ -90,13 +98,24 @@ func (f *TFrmHome) AppendServer(cfg *config.Server) {
 	f.SrvList = append(f.SrvList, obj)
 	frm.Show()
 
-	code := strconv.FormatInt(cfg.Code, 10)
-	global.PluginSrv.Events.PushEvent(code, pb.EventType_ET_ADD, &pb.ServerInfo{
-		Id:          code,
+	info := &pb.ServerInfo{
+		Id:          strconv.FormatInt(cfg.Code, 10),
 		Name:        cfg.Name,
 		ProcessName: cfg.Path,
 		State:       pb.StateType_ST_STOP,
-	})
+	}
+	f.PushEvent(pb.EventType_ET_ADD, info)
+}
+
+func (f *TFrmHome) PushEvent(t pb.EventType, info *pb.ServerInfo) {
+	list, err := config.GetToolPluginList("")
+	if err != nil {
+		return
+	}
+
+	for _, v := range list {
+		global.PluginSrv.Events.PushEvent(v.CookieKey, t, info)
+	}
 }
 
 func (f *TFrmHome) SrvHelper(msgInfo *message.Message) error {
@@ -250,13 +269,13 @@ func (f *TFrmHome) closeItem(msgInfo *message.Message) error {
 		return false
 	})
 
-	code := strconv.FormatInt(cfg.Code, 10)
-	global.PluginSrv.Events.PushEvent(code, pb.EventType_ET_REMOVE, &pb.ServerInfo{
-		Id:          code,
+	info := &pb.ServerInfo{
+		Id:          strconv.FormatInt(cfg.Code, 10),
 		Name:        cfg.Name,
 		ProcessName: cfg.Path,
 		State:       pb.StateType_ST_STOP,
-	})
+	}
+	f.PushEvent(pb.EventType_ET_REMOVE, info)
 
 	return nil
 }

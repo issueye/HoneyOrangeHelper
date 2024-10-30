@@ -147,6 +147,15 @@ func (f *TFrm_server) StopServer() {
 			State:       pb.StateType_ST_STOP,
 		})
 
+		info := &pb.ServerInfo{
+			Id:          strconv.FormatInt(f.data.Code, 10),
+			Name:        f.data.Name,
+			ProcessName: f.data.Path,
+			State:       pb.StateType_ST_STOP,
+		}
+
+		utils.PushEvent(pb.EventType_ET_STOP, info)
+
 		if f.log != nil {
 			// f.addLog("服务已停止...")
 			f.log.Info("服务已停止")
@@ -189,13 +198,13 @@ func (f *TFrm_server) RunServer() error {
 		f.Btn_server_run.SetImageIndex(1)
 		f.Btn_server_run.SetCaption("停止")
 
-		code := strconv.FormatInt(f.data.Code, 10)
-		global.PluginSrv.Events.PushEvent(code, pb.EventType_ET_START, &pb.ServerInfo{
-			Id:          code,
+		info := &pb.ServerInfo{
+			Id:          strconv.FormatInt(f.data.Code, 10),
 			Name:        f.data.Name,
 			ProcessName: f.data.Path,
 			State:       pb.StateType_ST_START,
-		})
+		}
+		utils.PushEvent(pb.EventType_ET_START, info)
 
 		if err != nil {
 			f.addLog("启动失败：" + err.Error())

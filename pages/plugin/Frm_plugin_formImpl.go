@@ -164,9 +164,11 @@ func (f *TFrm_plugin_form) SaveData() {
 	}
 
 	tool := &config.ToolPlugin{
-		Name:   f.Edt_name.Text(),
-		Path:   f.Edt_process_path.Text(),
-		Events: events,
+		Name:        f.Edt_name.Text(),
+		Path:        f.Edt_process_path.Text(),
+		CookieKey:   f.Edt_cookie_key.Text(),
+		CookieValue: f.Edt_cookie_value.Text(),
+		Events:      events,
 	}
 
 	if f.OperationType == 0 {
