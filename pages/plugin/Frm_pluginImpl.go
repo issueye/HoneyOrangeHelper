@@ -3,6 +3,7 @@ package plugin
 import (
 	"HoneyOrangeHelper/internal/config"
 	"HoneyOrangeHelper/internal/global"
+	"HoneyOrangeHelper/internal/utils"
 
 	"github.com/ThreeDotsLabs/watermill"
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -58,13 +59,25 @@ func (f *TFrm_plugin) OnShow(sender vcl.IObject) {
 
 func (f *TFrm_plugin) OnTable_dataButtonClick(sender vcl.IObject, col, row int32) {
 	// 如果是删除按钮
-	if col == 3 {
+	if col == 5 {
 		rt := vcl.MessageDlg("确定要删除吗？", types.MtWarning, types.MbYes, types.MbNo)
 		if rt == 6 {
 			config.DeleteToolPlugin(f.list[row-1].ID)
 			f.GetData()
 			return
 		}
+	}
+
+	// 如果是加载按钮， 则发送加载事件
+	if col == 3 {
+		msg := message.NewMessage(watermill.NewUUID(), message.Payload(utils.Int64ToBytes(f.list[row-1].ID)))
+		global.PubSub.Publish(global.TOPIC_SERVER_LOAD_TOOL_PLUGIN, msg)
+	}
+
+	// 如果是卸载按钮， 则发送卸载事件
+	if col == 4 {
+		msg := message.NewMessage(watermill.NewUUID(), message.Payload(utils.Int64ToBytes(f.list[row-1].ID)))
+		global.PubSub.Publish(global.TOPIC_SERVER_UNLOAD_TOOL_PLUGIN, msg)
 	}
 
 	// 如果是修改按钮，则弹出修改窗口
@@ -100,7 +113,9 @@ func (f *TFrm_plugin) GetData() {
 		f.Table_data.SetCells(0, row, list[i].Name)
 		f.Table_data.SetCells(1, row, list[i].Path)
 		f.Table_data.SetCells(2, row, "修改")
-		f.Table_data.SetCells(3, row, "删除")
+		f.Table_data.SetCells(3, row, "加载")
+		f.Table_data.SetCells(4, row, "卸载")
+		f.Table_data.SetCells(5, row, "删除")
 
 		// 如果是最后一行，则不再添加新行
 		if row == length {

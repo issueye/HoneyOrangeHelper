@@ -4,7 +4,7 @@ import (
 	"HoneyOrangeHelper/internal/config"
 	"HoneyOrangeHelper/internal/global"
 	"HoneyOrangeHelper/internal/helper_cmd"
-	process "HoneyOrangeHelper/internal/utils"
+	iUtils "HoneyOrangeHelper/internal/utils"
 	"HoneyOrangeHelper/pages/server"
 	"HoneyOrangeHelper/pkg/utils"
 	"context"
@@ -128,7 +128,7 @@ func (f *TFrmHome) RefreshToolPlugin(msgInfo *message.Message) error {
 	defer msgInfo.Ack()
 
 	// 清空菜单
-	p := new(process.Process)
+	p := new(iUtils.Process)
 	for _, item := range f.IMList {
 		// 关闭进程
 		// 判断是否有进程
@@ -181,6 +181,18 @@ func (f *TFrmHome) EventMonitor(ctx context.Context) {
 		return
 	}
 
+	// 加载插件事件
+	tpLoadMessages, err := global.PubSub.Subscribe(context.Background(), global.TOPIC_SERVER_LOAD_TOOL_PLUGIN)
+	if err != nil {
+		return
+	}
+
+	// 卸载插件事件
+	tpUnloadMessages, err := global.PubSub.Subscribe(context.Background(), global.TOPIC_SERVER_UNLOAD_TOOL_PLUGIN)
+	if err != nil {
+		return
+	}
+
 	// 帮助事件
 	srvHelperMessages, err := global.PubSub.Subscribe(context.Background(), global.TOPIC_SERVER_HELPER)
 	if err != nil {
@@ -214,6 +226,22 @@ func (f *TFrmHome) EventMonitor(ctx context.Context) {
 						continue
 					}
 				}
+			case msg := <-tpLoadMessages:
+				{
+					err = f.LoadToolPlugin(msg)
+					if err != nil {
+						global.Sugared.Errorf("加载插件失败 %s", err.Error())
+						continue
+					}
+				}
+			case msg := <-tpUnloadMessages:
+				{
+					err = f.UnloadToolPlugin(msg)
+					if err != nil {
+						global.Sugared.Errorf("卸载插件失败 %s", err.Error())
+						continue
+					}
+				}
 			case msg := <-srvHelperMessages:
 				{
 					err = f.SrvHelper(msg)
@@ -227,6 +255,38 @@ func (f *TFrmHome) EventMonitor(ctx context.Context) {
 			}
 		}
 	}(ctx)
+}
+
+func (f *TFrmHome) UnloadToolPlugin(msgInfo *message.Message) error {
+	defer msgInfo.Ack()
+
+	id := iUtils.BytesToInt64(msgInfo.Payload)
+	tp, err := config.GetToolPlugin(id)
+	if err != nil {
+		return err
+	}
+
+	for _, im := range f.IMList {
+		if tp.ID == im.Info.ID {
+			im.Free()
+		}
+	}
+
+	return nil
+}
+
+func (f *TFrmHome) LoadToolPlugin(msgInfo *message.Message) error {
+	defer msgInfo.Ack()
+
+	id := iUtils.BytesToInt64(msgInfo.Payload)
+	tp, err := config.GetToolPlugin(id)
+	if err != nil {
+		return err
+	}
+
+	f.AddMenuItem(tp)
+
+	return nil
 }
 
 // 选中服务

@@ -2,7 +2,9 @@ package home
 
 import (
 	"HoneyOrangeHelper/internal/config"
+	"HoneyOrangeHelper/internal/global"
 	"HoneyOrangeHelper/internal/helper_cmd"
+	"HoneyOrangeHelper/internal/utils"
 	"HoneyOrangeHelper/pages/about"
 	"HoneyOrangeHelper/pages/plugin"
 	"HoneyOrangeHelper/pages/server"
@@ -28,6 +30,17 @@ type ItemMenuObject struct {
 	RunResult *helper_cmd.RunResult
 	ctx       context.Context
 	cancel    context.CancelFunc
+}
+
+func (im *ItemMenuObject) Free() {
+	defer im.cancel()
+
+	im.Menu.Free()
+	p := &utils.Process{}
+	err := p.KillProcessAndChildren(im.RunResult.Pid)
+	if err != nil {
+		global.Sugared.Error(err)
+	}
 }
 
 // ::private::
