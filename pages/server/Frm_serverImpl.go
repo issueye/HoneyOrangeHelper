@@ -5,6 +5,7 @@ import (
 	"HoneyOrangeHelper/internal/global"
 	"HoneyOrangeHelper/internal/gow32"
 	"HoneyOrangeHelper/internal/helper_cmd"
+	"HoneyOrangeHelper/internal/utils"
 	"context"
 	"fmt"
 	"strconv"
@@ -53,7 +54,6 @@ func (f *TFrm_server) OnFormCreate(sender vcl.IObject) {
 }
 
 func (f *TFrm_server) CloseWindow() {
-
 	for _, btn := range f.PluginBtns {
 		btn.Btn.Free()
 	}
@@ -134,6 +134,7 @@ func (f *TFrm_server) StopServer() {
 	f.IsRunning = false
 	f.Btn_server_run.SetImageIndex(0)
 	f.Btn_server_run.SetCaption("启动")
+	f.ShowLogCount = int32(config.GetParam(config.LOG, "show-log-count", 100).Int())
 
 	defer func() {
 		defer f.cancel()
@@ -170,8 +171,9 @@ func (f *TFrm_server) StopServer() {
 		}
 	}
 
-	p := &Process{msg: f.ServerMessage}
-	err := p.killProcessAndChildren(f.runResult.Pid)
+	p := new(utils.Process)
+	p.Msg = f.ServerMessage
+	err := p.KillProcessAndChildren(f.runResult.Pid)
 	if err != nil {
 		f.ServerMessage <- fmt.Sprintf("停止服务失败: %s", err.Error())
 		return

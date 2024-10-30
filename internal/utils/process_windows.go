@@ -1,7 +1,6 @@
-package server
+package utils
 
 import (
-	"HoneyOrangeHelper/internal/global"
 	"fmt"
 	"syscall"
 	"unsafe"
@@ -34,11 +33,17 @@ func getChildPIDs(pid int) ([]int, error) {
 }
 
 type Process struct {
-	msg chan string
+	Msg chan string
+}
+
+func (p *Process) sendMessage(msg string) {
+	if p.Msg != nil {
+		p.Msg <- msg
+	}
 }
 
 // killProcessAndChildren 递归杀死指定 PID 的进程及其所有子进程
-func (p *Process) killProcessAndChildren(pid int) error {
+func (p *Process) KillProcessAndChildren(pid int) error {
 	childPIDs, err := getChildPIDs(pid)
 	if err != nil {
 		return err
@@ -46,50 +51,45 @@ func (p *Process) killProcessAndChildren(pid int) error {
 
 	// 杀死子进程
 	for _, childPID := range childPIDs {
-		global.Sugared.Infof("结束子进程: %d\n", childPID)
-		p.msg <- fmt.Sprintf("结束子进程: %d\n", childPID)
+		p.sendMessage(fmt.Sprintf("开始结束子进程: %d\n", childPID))
 
 		// 打开子进程句柄
 		childHandle, err := windows.OpenProcess(windows.PROCESS_TERMINATE, false, uint32(childPID))
 		if err != nil {
-			global.Sugared.Infof("打开子进程句柄失败 %d: %v\n", childPID, err)
-			p.msg <- fmt.Sprintf("打开子进程句柄失败 %d: %v\n", childPID, err)
+			p.sendMessage(fmt.Sprintf("打开子进程句柄失败 %d: %v\n", childPID, err))
 			continue // 继续尝试下一个子进程
 		}
 
 		// 递归杀死子进程的子进程
-		if err := p.killProcessAndChildren(childPID); err != nil {
-			global.Sugared.Infof("结束子进程失败 %d: %v\n", childPID, err)
-			p.msg <- fmt.Sprintf("结束子进程失败 %d: %v\n", childPID, err)
+		if err := p.KillProcessAndChildren(childPID); err != nil {
+			p.sendMessage(fmt.Sprintf("结束子进程失败 %d: %v\n", childPID, err))
 		}
 
 		// 终止子进程
 		err = syscall.TerminateProcess(syscall.Handle(childHandle), 1) // 类型转换
 		if err != nil {
-			global.Sugared.Infof("结束子进程失败 %d: %v\n", childPID, err)
-			p.msg <- fmt.Sprintf("结束子进程失败 %d: %v\n", childPID, err)
+			p.sendMessage(fmt.Sprintf("结束子进程失败 %d: %v\n", childPID, err))
 		}
 		windows.CloseHandle(childHandle) // 关闭句柄
 
-		p.msg <- fmt.Sprintf("结束子进程成功 %d\n", childPID)
+		p.sendMessage(fmt.Sprintf("结束子进程成功 %d\n", childPID))
 	}
 
 	// 杀死父进程
-	global.Sugared.Infof("结束父进程: %d\n", pid)
-	p.msg <- fmt.Sprintf("结束父进程: %d\n", pid)
+	p.sendMessage(fmt.Sprintf("结束父进程: %d\n", pid))
 	parentHandle, err := windows.OpenProcess(windows.PROCESS_TERMINATE, false, uint32(pid))
 	if err != nil {
-		p.msg <- fmt.Sprintf("打开父进程句柄失败 %d: %v\n", pid, err)
+		p.sendMessage(fmt.Sprintf("打开父进程句柄失败 %d: %v\n", pid, err))
 		return err
 	}
 	defer windows.CloseHandle(parentHandle)
 
 	err = syscall.TerminateProcess(syscall.Handle(parentHandle), 1) // 类型转换
 	if err != nil {
-		p.msg <- fmt.Sprintf("结束父进程失败 %d: %v\n", pid, err)
+		p.sendMessage(fmt.Sprintf("结束父进程失败 %d: %v\n", pid, err))
 		return err
 	}
 
-	p.msg <- fmt.Sprintf("结束父进程成功 %d\n", pid)
+	p.sendMessage(fmt.Sprintf("结束父进程成功 %d\n", pid))
 	return nil
 }

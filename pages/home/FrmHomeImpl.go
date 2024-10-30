@@ -2,6 +2,7 @@ package home
 
 import (
 	"HoneyOrangeHelper/internal/config"
+	"HoneyOrangeHelper/internal/helper_cmd"
 	"HoneyOrangeHelper/pages/about"
 	"HoneyOrangeHelper/pages/plugin"
 	"HoneyOrangeHelper/pages/server"
@@ -22,8 +23,11 @@ type SrvObject struct {
 }
 
 type ItemMenuObject struct {
-	Menu *vcl.TMenuItem
-	Info *config.ToolPlugin
+	Menu      *vcl.TMenuItem
+	Info      *config.ToolPlugin
+	RunResult *helper_cmd.RunResult
+	ctx       context.Context
+	cancel    context.CancelFunc
 }
 
 // ::private::
@@ -37,6 +41,7 @@ type TFrmHomeFields struct {
 
 	SrvList []*SrvObject
 	IMList  []*ItemMenuObject
+	tpMsg   chan string
 }
 
 func (f *TFrmHome) OnFormCreate(sender vcl.IObject) {

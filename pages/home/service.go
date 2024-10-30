@@ -3,6 +3,8 @@ package home
 import (
 	"HoneyOrangeHelper/internal/config"
 	"HoneyOrangeHelper/internal/global"
+	"HoneyOrangeHelper/internal/helper_cmd"
+	process "HoneyOrangeHelper/internal/utils"
 	"HoneyOrangeHelper/pages/server"
 	"HoneyOrangeHelper/pkg/utils"
 	"context"
@@ -52,9 +54,22 @@ func (f *TFrmHome) AddMenuItem(tp *config.ToolPlugin) {
 	menu := vcl.NewMenuItem(f)
 	menu.SetCaption(tp.Name)
 	f.Meu_tool_plugin_mana.Add(menu)
-	menu.SetOnClick(f.MenuItemOnclick(tp))
 
-	f.IMList = append(f.IMList, &ItemMenuObject{Menu: menu, Info: tp})
+	// 创建对象
+	imObj := &ItemMenuObject{Menu: menu, Info: tp}
+	imObj.ctx, imObj.cancel = context.WithCancel(context.Background())
+	// 启动拓展插件
+	global.Sugared.Debugf("启动插件：%s", tp.Path)
+	result, err := helper_cmd.Run(100)(imObj.ctx, true, tp.Path)
+	if err != nil {
+		global.Sugared.Debugf("启动插件失败：%s", err.Error())
+		return
+	}
+
+	imObj.RunResult = result
+	f.IMList = append(f.IMList, imObj)
+
+	menu.SetOnClick(f.MenuItemOnclick(tp))
 }
 
 func (f *TFrmHome) MenuItemOnclick(tp *config.ToolPlugin) func(sender vcl.IObject) {
@@ -94,8 +109,22 @@ func (f *TFrmHome) RefreshToolPlugin(msgInfo *message.Message) error {
 	defer msgInfo.Ack()
 
 	// 清空菜单
+	p := new(process.Process)
 	for _, item := range f.IMList {
+		// 关闭进程
+		// 判断是否有进程
+		if item.RunResult.Pid > 0 {
+			err := p.KillProcessAndChildren(item.RunResult.Pid)
+			if err != nil {
+				return err
+			}
+		}
+
+		// 释放内存
 		item.Menu.Free()
+
+		// 取消监听
+		item.cancel()
 	}
 
 	// 清空菜单对象

@@ -14,9 +14,9 @@ type TFrm_plugin struct {
 	Btn_query             *vcl.TBitBtn
 	Edt_condition         *vcl.TLabeledEdit
 	Btn_add               *vcl.TBitBtn
+	Btn_refresh_home_menu *vcl.TBitBtn
 	Table_data            *vcl.TStringGrid
 	Imgs                  *vcl.TImageList
-	Btn_refresh_home_menu *vcl.TBitBtn
 
 	// ::private::
 	TFrm_pluginFields
