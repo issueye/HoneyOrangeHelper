@@ -26,7 +26,7 @@ type TFrm_pluginFields struct {
 
 func (f *TFrm_plugin) OnFormCreate(sender vcl.IObject) {
 	f.list = make([]*config.ToolPlugin, 0)
-
+	f.Btn_refresh_home_menu.SetVisible(false)
 	f.SetEvents()
 }
 

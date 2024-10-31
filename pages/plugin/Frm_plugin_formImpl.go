@@ -35,6 +35,8 @@ type TFrm_plugin_formFields struct {
 func (f *TFrm_plugin_form) ResetData() {
 	f.Edt_name.Clear()
 	f.Edt_process_path.Clear()
+	f.Edt_cookie_key.Clear()
+	f.Edt_cookie_value.Clear()
 
 	f.Table_event.SetRowCount(6)
 
@@ -73,6 +75,8 @@ func (f *TFrm_plugin_form) SetData(data *config.ToolPlugin) {
 
 	f.Edt_name.SetText(data.Name)
 	f.Edt_process_path.SetText(data.Path)
+	f.Edt_cookie_key.SetText(data.CookieKey)
+	f.Edt_cookie_value.SetText(data.CookieValue)
 
 	for index, v := range f.data.Events {
 		row := int32(index + 1)
